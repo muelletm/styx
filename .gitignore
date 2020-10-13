@@ -2,3 +2,5 @@ dist/*
 build/*
 *.egg-info
 */__pycache__/*
+relu4_1/
+wctpaper.py

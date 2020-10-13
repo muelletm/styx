@@ -1,6 +1,6 @@
 ### Keep it STUPID
 
-hallo
+eine sammlung von funktionen für ai und google colab
 github : http://github.com/bomelino/stupid
 
 ### build python & upload

@@ -1,6 +1,13 @@
 """
 module documentation
 """
+
+import numpy as np 
+import imageio
+import tensorflow as tf
+import requests # für http
+
+
 def imports(g):
 	""" importiere alle standard namen. muss mit globals() aufgerufen werden:
 	stupid.imports(globals())
@@ -12,6 +19,7 @@ def imports(g):
 	import numpy as np
 	import functools
 	import tensorflow_datasets as tfds
+	import matplotlib.image as mpimg
 
 	g["tf"] = tf 
 	g["display"] = display 
@@ -21,5 +29,59 @@ def imports(g):
 	g["np"] = np
 	g["functools"] = functools 
 	g["tfds"] = tfds
+	g["mpimg"] = mpimg
 
 	print("verfügbare Variablen: tf, display, plt, np/numpy, functools, tfds")
+
+
+def img(filename='steine.jpg'):
+	""" lade bild aus drive/colab/images
+	google drive muss gemountet sein"""
+	return mpimg.imread('/content/drive/My Drive/colab/images/'+filename)
+
+
+def load(path_to_img):
+	""" ziel: allgemeine load methode. im moment nur bilder
+	img pfad -> tensor mit maxdim 512 und values 0..1
+	"""
+	max_dim = 512
+	img = tf.io.read_file(path_to_img)
+	img = tf.image.decode_image(img, channels=3)
+	img = tf.image.convert_image_dtype(img, tf.float32)
+
+	shape = tf.cast(tf.shape(img)[:-1], tf.float32)
+	long_dim = max(shape)
+	scale = max_dim / long_dim
+
+	new_shape = tf.cast(shape * scale, tf.int32)
+	img = tf.image.resize(img, new_shape)
+	#img = img[tf.newaxis, :]
+	return img
+
+def gilbert():
+	""" gibt die gilbert katze als tensor """
+	url = "https://raw.githubusercontent.com/bomelino/stupid/master/images/gilbert.jpg"
+	img = tf.image.decode_image(requests.get(url).content, channels=3) #, name="jpeg_reader")
+	img = tf.image.convert_image_dtype(img, tf.float32)
+	return img
+
+def img(name):
+	""" gibt bild aus dem github folder /images"""
+	url = "https://raw.githubusercontent.com/bomelino/stupid/master/images/"+name
+	img = tf.image.decode_image(requests.get(url).content, channels=3) #, name="jpeg_reader")
+	img = tf.image.convert_image_dtype(img, tf.float32)
+	return img
+
+
+def get_img(src):
+   img = imageio.imread(src)
+   if not (len(img.shape) == 3 and img.shape[2] == 3):
+       img = np.dstack((img,img,img))
+   return img
+
+
+
+def batch(t): 
+	""" füge batch dimension hinzu """
+	return tf.expand_dims(t,axis=0)
+
