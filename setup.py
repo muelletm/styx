@@ -8,7 +8,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="stupid-bomelino", # Replace with your own username
-    version="0.0.8",
+    version="0.0.9",
     author="tino bomelino",
     author_email="tino@bomelino.de",
     description="AI helpers aber schön kurz",

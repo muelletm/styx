@@ -12,6 +12,9 @@ class Reflect2D(Layer):
         #self.input_spec = [InputSpec(ndim=4)]
         super(Reflect2D, self).__init__(**kwargs)
 
+    def get_config(self):
+        return {"padding": self.padding}
+
     def compute_output_shape(self, s):
         """ If you are using "channels_last" configuration"""
         return (s[0], s[1] + 2 * self.padding[0], s[2] + 2 * self.padding[1], s[3])

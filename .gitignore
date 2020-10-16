@@ -4,3 +4,5 @@ build/*
 */__pycache__/*
 relu4_1/
 wctpaper.py
+log
+logs
