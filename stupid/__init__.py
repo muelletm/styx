@@ -6,10 +6,23 @@ import numpy as np
 import imageio
 import tensorflow as tf
 import requests # für http
-import layer
-import checkpoint
+
+from . import checkpoint
+from . import layer
+from . import graph
+from ops import * # das müsste ok sein, weil operations sehr spezielle namen haben und sich da nichts in die quere kommt
+
+# standard objekt inspect
+def inspect(obj):
+	for key in dir(obj):
+		if(not key.startswith("_")):
+			value = getattr(obj,key) 
+			print(f"{key}: {type(value)}")
+			if(value.__doc__ != None):
+				print("\t"+value.__doc__.split("\n")[0])
 
 
+# todo: könnte man auch über import * also __all__ machen
 def imports(g):
 	""" importiere alle standard namen. muss mit globals() aufgerufen werden:
 	stupid.imports(globals())
@@ -22,6 +35,7 @@ def imports(g):
 	import functools
 	import tensorflow_datasets as tfds
 	import matplotlib.image as mpimg
+	import keras
 
 	g["tf"] = tf 
 	g["display"] = display 
@@ -32,6 +46,8 @@ def imports(g):
 	g["functools"] = functools 
 	g["tfds"] = tfds
 	g["mpimg"] = mpimg
+	g["keras"] = keras
+
 
 	print("verfügbare Variablen: tf, display, plt, np/numpy, functools, tfds")
 

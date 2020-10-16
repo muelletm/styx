@@ -3,10 +3,16 @@
 eine sammlung von funktionen für ai und google colab
 github : http://github.com/bomelino/stupid
 
+in colab: 
+	
+! pip install --upgrade --index-url https://test.pypi.org/simple stupid-bomelino
+import stupid
+
 ### build python & upload
 
 `python setup.py sdist bdist_wheel`
 `twine upload --skip-existing --repository testpypi dist/*`
+
 
 
 ### testpypi url

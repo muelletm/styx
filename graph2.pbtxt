@@ -1,0 +1,3411 @@
+node {
+  name: "flatten_input"
+  op: "Placeholder"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "shape"
+    value {
+      shape {
+        dim {
+          size: -1
+        }
+        dim {
+          size: 28
+        }
+        dim {
+          size: 28
+        }
+      }
+    }
+  }
+}
+node {
+  name: "flatten/Const"
+  op: "Const"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_INT32
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_INT32
+        tensor_shape {
+          dim {
+            size: 2
+          }
+        }
+        tensor_content: "\377\377\377\377\020\003\000\000"
+      }
+    }
+  }
+}
+node {
+  name: "flatten/Reshape"
+  op: "Reshape"
+  input: "flatten_input"
+  input: "flatten/Const"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "Tshape"
+    value {
+      type: DT_INT32
+    }
+  }
+}
+node {
+  name: "dense/kernel/Initializer/random_uniform/shape"
+  op: "Const"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@dense/kernel"
+      }
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_INT32
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_INT32
+        tensor_shape {
+          dim {
+            size: 2
+          }
+        }
+        tensor_content: "\020\003\000\000 \000\000\000"
+      }
+    }
+  }
+}
+node {
+  name: "dense/kernel/Initializer/random_uniform/min"
+  op: "Const"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@dense/kernel"
+      }
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_FLOAT
+        tensor_shape {
+        }
+        float_val: -0.08574929088354111
+      }
+    }
+  }
+}
+node {
+  name: "dense/kernel/Initializer/random_uniform/max"
+  op: "Const"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@dense/kernel"
+      }
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_FLOAT
+        tensor_shape {
+        }
+        float_val: 0.08574929088354111
+      }
+    }
+  }
+}
+node {
+  name: "dense/kernel/Initializer/random_uniform/RandomUniform"
+  op: "RandomUniform"
+  input: "dense/kernel/Initializer/random_uniform/shape"
+  attr {
+    key: "T"
+    value {
+      type: DT_INT32
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@dense/kernel"
+      }
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "seed"
+    value {
+      i: 0
+    }
+  }
+  attr {
+    key: "seed2"
+    value {
+      i: 0
+    }
+  }
+}
+node {
+  name: "dense/kernel/Initializer/random_uniform/sub"
+  op: "Sub"
+  input: "dense/kernel/Initializer/random_uniform/max"
+  input: "dense/kernel/Initializer/random_uniform/min"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@dense/kernel"
+      }
+    }
+  }
+}
+node {
+  name: "dense/kernel/Initializer/random_uniform/mul"
+  op: "Mul"
+  input: "dense/kernel/Initializer/random_uniform/RandomUniform"
+  input: "dense/kernel/Initializer/random_uniform/sub"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@dense/kernel"
+      }
+    }
+  }
+}
+node {
+  name: "dense/kernel/Initializer/random_uniform"
+  op: "Add"
+  input: "dense/kernel/Initializer/random_uniform/mul"
+  input: "dense/kernel/Initializer/random_uniform/min"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@dense/kernel"
+      }
+    }
+  }
+}
+node {
+  name: "dense/kernel"
+  op: "VarHandleOp"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@dense/kernel"
+      }
+    }
+  }
+  attr {
+    key: "container"
+    value {
+      s: ""
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "shape"
+    value {
+      shape {
+        dim {
+          size: 784
+        }
+        dim {
+          size: 32
+        }
+      }
+    }
+  }
+  attr {
+    key: "shared_name"
+    value {
+      s: "dense/kernel"
+    }
+  }
+}
+node {
+  name: "dense/kernel/IsInitialized/VarIsInitializedOp"
+  op: "VarIsInitializedOp"
+  input: "dense/kernel"
+}
+node {
+  name: "dense/kernel/Assign"
+  op: "AssignVariableOp"
+  input: "dense/kernel"
+  input: "dense/kernel/Initializer/random_uniform"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+}
+node {
+  name: "dense/kernel/Read/ReadVariableOp"
+  op: "ReadVariableOp"
+  input: "dense/kernel"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+}
+node {
+  name: "dense/bias/Initializer/zeros"
+  op: "Const"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@dense/bias"
+      }
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_FLOAT
+        tensor_shape {
+          dim {
+            size: 32
+          }
+        }
+        float_val: 0.0
+      }
+    }
+  }
+}
+node {
+  name: "dense/bias"
+  op: "VarHandleOp"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@dense/bias"
+      }
+    }
+  }
+  attr {
+    key: "container"
+    value {
+      s: ""
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "shape"
+    value {
+      shape {
+        dim {
+          size: 32
+        }
+      }
+    }
+  }
+  attr {
+    key: "shared_name"
+    value {
+      s: "dense/bias"
+    }
+  }
+}
+node {
+  name: "dense/bias/IsInitialized/VarIsInitializedOp"
+  op: "VarIsInitializedOp"
+  input: "dense/bias"
+}
+node {
+  name: "dense/bias/Assign"
+  op: "AssignVariableOp"
+  input: "dense/bias"
+  input: "dense/bias/Initializer/zeros"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+}
+node {
+  name: "dense/bias/Read/ReadVariableOp"
+  op: "ReadVariableOp"
+  input: "dense/bias"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+}
+node {
+  name: "dense/MatMul/ReadVariableOp"
+  op: "ReadVariableOp"
+  input: "dense/kernel"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+}
+node {
+  name: "dense/MatMul"
+  op: "MatMul"
+  input: "flatten/Reshape"
+  input: "dense/MatMul/ReadVariableOp"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "transpose_a"
+    value {
+      b: false
+    }
+  }
+  attr {
+    key: "transpose_b"
+    value {
+      b: false
+    }
+  }
+}
+node {
+  name: "dense/BiasAdd/ReadVariableOp"
+  op: "ReadVariableOp"
+  input: "dense/bias"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+}
+node {
+  name: "dense/BiasAdd"
+  op: "BiasAdd"
+  input: "dense/MatMul"
+  input: "dense/BiasAdd/ReadVariableOp"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "data_format"
+    value {
+      s: "NHWC"
+    }
+  }
+}
+node {
+  name: "dense/Relu"
+  op: "Relu"
+  input: "dense/BiasAdd"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+}
+node {
+  name: "keras_learning_phase/input"
+  op: "Const"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_BOOL
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_BOOL
+        tensor_shape {
+        }
+        bool_val: false
+      }
+    }
+  }
+}
+node {
+  name: "keras_learning_phase"
+  op: "PlaceholderWithDefault"
+  input: "keras_learning_phase/input"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_BOOL
+    }
+  }
+  attr {
+    key: "shape"
+    value {
+      shape {
+      }
+    }
+  }
+}
+node {
+  name: "dropout/cond"
+  op: "If"
+  input: "keras_learning_phase"
+  input: "dense/Relu"
+  attr {
+    key: "Tcond"
+    value {
+      type: DT_BOOL
+    }
+  }
+  attr {
+    key: "Tin"
+    value {
+      list {
+        type: DT_FLOAT
+      }
+    }
+  }
+  attr {
+    key: "Tout"
+    value {
+      list {
+        type: DT_FLOAT
+        type: DT_VARIANT
+        type: DT_VARIANT
+        type: DT_VARIANT
+        type: DT_VARIANT
+        type: DT_VARIANT
+        type: DT_VARIANT
+        type: DT_VARIANT
+        type: DT_VARIANT
+        type: DT_VARIANT
+        type: DT_VARIANT
+        type: DT_VARIANT
+        type: DT_VARIANT
+        type: DT_VARIANT
+        type: DT_VARIANT
+        type: DT_VARIANT
+      }
+    }
+  }
+  attr {
+    key: "_lower_using_switch_merge"
+    value {
+      b: true
+    }
+  }
+  attr {
+    key: "else_branch"
+    value {
+      func {
+        name: "dropout_cond_false_26"
+      }
+    }
+  }
+  attr {
+    key: "output_shapes"
+    value {
+      list {
+        shape {
+          dim {
+            size: -1
+          }
+          dim {
+            size: 32
+          }
+        }
+        shape {
+        }
+        shape {
+        }
+        shape {
+        }
+        shape {
+        }
+        shape {
+        }
+        shape {
+        }
+        shape {
+        }
+        shape {
+        }
+        shape {
+        }
+        shape {
+        }
+        shape {
+        }
+        shape {
+        }
+        shape {
+        }
+        shape {
+        }
+        shape {
+        }
+      }
+    }
+  }
+  attr {
+    key: "then_branch"
+    value {
+      func {
+        name: "dropout_cond_true_25"
+      }
+    }
+  }
+}
+node {
+  name: "dropout/cond/Identity"
+  op: "Identity"
+  input: "dropout/cond"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+}
+node {
+  name: "dropout/cond/Identity_1"
+  op: "Identity"
+  input: "dropout/cond:1"
+  attr {
+    key: "T"
+    value {
+      type: DT_VARIANT
+    }
+  }
+}
+node {
+  name: "dropout/cond/Identity_2"
+  op: "Identity"
+  input: "dropout/cond:2"
+  attr {
+    key: "T"
+    value {
+      type: DT_VARIANT
+    }
+  }
+}
+node {
+  name: "dropout/cond/Identity_3"
+  op: "Identity"
+  input: "dropout/cond:3"
+  attr {
+    key: "T"
+    value {
+      type: DT_VARIANT
+    }
+  }
+}
+node {
+  name: "dropout/cond/Identity_4"
+  op: "Identity"
+  input: "dropout/cond:4"
+  attr {
+    key: "T"
+    value {
+      type: DT_VARIANT
+    }
+  }
+}
+node {
+  name: "dropout/cond/Identity_5"
+  op: "Identity"
+  input: "dropout/cond:5"
+  attr {
+    key: "T"
+    value {
+      type: DT_VARIANT
+    }
+  }
+}
+node {
+  name: "dropout/cond/Identity_6"
+  op: "Identity"
+  input: "dropout/cond:6"
+  attr {
+    key: "T"
+    value {
+      type: DT_VARIANT
+    }
+  }
+}
+node {
+  name: "dropout/cond/Identity_7"
+  op: "Identity"
+  input: "dropout/cond:7"
+  attr {
+    key: "T"
+    value {
+      type: DT_VARIANT
+    }
+  }
+}
+node {
+  name: "dropout/cond/Identity_8"
+  op: "Identity"
+  input: "dropout/cond:8"
+  attr {
+    key: "T"
+    value {
+      type: DT_VARIANT
+    }
+  }
+}
+node {
+  name: "dropout/cond/Identity_9"
+  op: "Identity"
+  input: "dropout/cond:9"
+  attr {
+    key: "T"
+    value {
+      type: DT_VARIANT
+    }
+  }
+}
+node {
+  name: "dropout/cond/Identity_10"
+  op: "Identity"
+  input: "dropout/cond:10"
+  attr {
+    key: "T"
+    value {
+      type: DT_VARIANT
+    }
+  }
+}
+node {
+  name: "dropout/cond/Identity_11"
+  op: "Identity"
+  input: "dropout/cond:11"
+  attr {
+    key: "T"
+    value {
+      type: DT_VARIANT
+    }
+  }
+}
+node {
+  name: "dropout/cond/Identity_12"
+  op: "Identity"
+  input: "dropout/cond:12"
+  attr {
+    key: "T"
+    value {
+      type: DT_VARIANT
+    }
+  }
+}
+node {
+  name: "dropout/cond/Identity_13"
+  op: "Identity"
+  input: "dropout/cond:13"
+  attr {
+    key: "T"
+    value {
+      type: DT_VARIANT
+    }
+  }
+}
+node {
+  name: "dropout/cond/Identity_14"
+  op: "Identity"
+  input: "dropout/cond:14"
+  attr {
+    key: "T"
+    value {
+      type: DT_VARIANT
+    }
+  }
+}
+node {
+  name: "dropout/cond/Identity_15"
+  op: "Identity"
+  input: "dropout/cond:15"
+  attr {
+    key: "T"
+    value {
+      type: DT_VARIANT
+    }
+  }
+}
+node {
+  name: "dense_1/kernel/Initializer/random_uniform/shape"
+  op: "Const"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@dense_1/kernel"
+      }
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_INT32
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_INT32
+        tensor_shape {
+          dim {
+            size: 2
+          }
+        }
+        tensor_content: " \000\000\000\n\000\000\000"
+      }
+    }
+  }
+}
+node {
+  name: "dense_1/kernel/Initializer/random_uniform/min"
+  op: "Const"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@dense_1/kernel"
+      }
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_FLOAT
+        tensor_shape {
+        }
+        float_val: -0.37796446681022644
+      }
+    }
+  }
+}
+node {
+  name: "dense_1/kernel/Initializer/random_uniform/max"
+  op: "Const"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@dense_1/kernel"
+      }
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_FLOAT
+        tensor_shape {
+        }
+        float_val: 0.37796446681022644
+      }
+    }
+  }
+}
+node {
+  name: "dense_1/kernel/Initializer/random_uniform/RandomUniform"
+  op: "RandomUniform"
+  input: "dense_1/kernel/Initializer/random_uniform/shape"
+  attr {
+    key: "T"
+    value {
+      type: DT_INT32
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@dense_1/kernel"
+      }
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "seed"
+    value {
+      i: 0
+    }
+  }
+  attr {
+    key: "seed2"
+    value {
+      i: 0
+    }
+  }
+}
+node {
+  name: "dense_1/kernel/Initializer/random_uniform/sub"
+  op: "Sub"
+  input: "dense_1/kernel/Initializer/random_uniform/max"
+  input: "dense_1/kernel/Initializer/random_uniform/min"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@dense_1/kernel"
+      }
+    }
+  }
+}
+node {
+  name: "dense_1/kernel/Initializer/random_uniform/mul"
+  op: "Mul"
+  input: "dense_1/kernel/Initializer/random_uniform/RandomUniform"
+  input: "dense_1/kernel/Initializer/random_uniform/sub"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@dense_1/kernel"
+      }
+    }
+  }
+}
+node {
+  name: "dense_1/kernel/Initializer/random_uniform"
+  op: "Add"
+  input: "dense_1/kernel/Initializer/random_uniform/mul"
+  input: "dense_1/kernel/Initializer/random_uniform/min"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@dense_1/kernel"
+      }
+    }
+  }
+}
+node {
+  name: "dense_1/kernel"
+  op: "VarHandleOp"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@dense_1/kernel"
+      }
+    }
+  }
+  attr {
+    key: "container"
+    value {
+      s: ""
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "shape"
+    value {
+      shape {
+        dim {
+          size: 32
+        }
+        dim {
+          size: 10
+        }
+      }
+    }
+  }
+  attr {
+    key: "shared_name"
+    value {
+      s: "dense_1/kernel"
+    }
+  }
+}
+node {
+  name: "dense_1/kernel/IsInitialized/VarIsInitializedOp"
+  op: "VarIsInitializedOp"
+  input: "dense_1/kernel"
+}
+node {
+  name: "dense_1/kernel/Assign"
+  op: "AssignVariableOp"
+  input: "dense_1/kernel"
+  input: "dense_1/kernel/Initializer/random_uniform"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+}
+node {
+  name: "dense_1/kernel/Read/ReadVariableOp"
+  op: "ReadVariableOp"
+  input: "dense_1/kernel"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+}
+node {
+  name: "dense_1/bias/Initializer/zeros"
+  op: "Const"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@dense_1/bias"
+      }
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_FLOAT
+        tensor_shape {
+          dim {
+            size: 10
+          }
+        }
+        float_val: 0.0
+      }
+    }
+  }
+}
+node {
+  name: "dense_1/bias"
+  op: "VarHandleOp"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@dense_1/bias"
+      }
+    }
+  }
+  attr {
+    key: "container"
+    value {
+      s: ""
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "shape"
+    value {
+      shape {
+        dim {
+          size: 10
+        }
+      }
+    }
+  }
+  attr {
+    key: "shared_name"
+    value {
+      s: "dense_1/bias"
+    }
+  }
+}
+node {
+  name: "dense_1/bias/IsInitialized/VarIsInitializedOp"
+  op: "VarIsInitializedOp"
+  input: "dense_1/bias"
+}
+node {
+  name: "dense_1/bias/Assign"
+  op: "AssignVariableOp"
+  input: "dense_1/bias"
+  input: "dense_1/bias/Initializer/zeros"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+}
+node {
+  name: "dense_1/bias/Read/ReadVariableOp"
+  op: "ReadVariableOp"
+  input: "dense_1/bias"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+}
+node {
+  name: "dense_1/MatMul/ReadVariableOp"
+  op: "ReadVariableOp"
+  input: "dense_1/kernel"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+}
+node {
+  name: "dense_1/MatMul"
+  op: "MatMul"
+  input: "dropout/cond/Identity"
+  input: "dense_1/MatMul/ReadVariableOp"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "transpose_a"
+    value {
+      b: false
+    }
+  }
+  attr {
+    key: "transpose_b"
+    value {
+      b: false
+    }
+  }
+}
+node {
+  name: "dense_1/BiasAdd/ReadVariableOp"
+  op: "ReadVariableOp"
+  input: "dense_1/bias"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+}
+node {
+  name: "dense_1/BiasAdd"
+  op: "BiasAdd"
+  input: "dense_1/MatMul"
+  input: "dense_1/BiasAdd/ReadVariableOp"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "data_format"
+    value {
+      s: "NHWC"
+    }
+  }
+}
+node {
+  name: "dense_1/Softmax"
+  op: "Softmax"
+  input: "dense_1/BiasAdd"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+}
+node {
+  name: "dense_1_target"
+  op: "Placeholder"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "shape"
+    value {
+      shape {
+        dim {
+          size: -1
+        }
+        dim {
+          size: -1
+        }
+      }
+    }
+  }
+}
+node {
+  name: "total/Initializer/zeros"
+  op: "Const"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@total"
+      }
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_FLOAT
+        tensor_shape {
+        }
+        float_val: 0.0
+      }
+    }
+  }
+}
+node {
+  name: "total"
+  op: "VarHandleOp"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@total"
+      }
+    }
+  }
+  attr {
+    key: "container"
+    value {
+      s: ""
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "shape"
+    value {
+      shape {
+      }
+    }
+  }
+  attr {
+    key: "shared_name"
+    value {
+      s: "total"
+    }
+  }
+}
+node {
+  name: "total/IsInitialized/VarIsInitializedOp"
+  op: "VarIsInitializedOp"
+  input: "total"
+}
+node {
+  name: "total/Assign"
+  op: "AssignVariableOp"
+  input: "total"
+  input: "total/Initializer/zeros"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+}
+node {
+  name: "total/Read/ReadVariableOp"
+  op: "ReadVariableOp"
+  input: "total"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+}
+node {
+  name: "count/Initializer/zeros"
+  op: "Const"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@count"
+      }
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_FLOAT
+        tensor_shape {
+        }
+        float_val: 0.0
+      }
+    }
+  }
+}
+node {
+  name: "count"
+  op: "VarHandleOp"
+  attr {
+    key: "_class"
+    value {
+      list {
+        s: "loc:@count"
+      }
+    }
+  }
+  attr {
+    key: "container"
+    value {
+      s: ""
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "shape"
+    value {
+      shape {
+      }
+    }
+  }
+  attr {
+    key: "shared_name"
+    value {
+      s: "count"
+    }
+  }
+}
+node {
+  name: "count/IsInitialized/VarIsInitializedOp"
+  op: "VarIsInitializedOp"
+  input: "count"
+}
+node {
+  name: "count/Assign"
+  op: "AssignVariableOp"
+  input: "count"
+  input: "count/Initializer/zeros"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+}
+node {
+  name: "count/Read/ReadVariableOp"
+  op: "ReadVariableOp"
+  input: "count"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+}
+node {
+  name: "metrics/accuracy/Squeeze"
+  op: "Squeeze"
+  input: "dense_1_target"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "squeeze_dims"
+    value {
+      list {
+        i: -1
+      }
+    }
+  }
+}
+node {
+  name: "metrics/accuracy/ArgMax/dimension"
+  op: "Const"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_INT32
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_INT32
+        tensor_shape {
+        }
+        int_val: -1
+      }
+    }
+  }
+}
+node {
+  name: "metrics/accuracy/ArgMax"
+  op: "ArgMax"
+  input: "dense_1/Softmax"
+  input: "metrics/accuracy/ArgMax/dimension"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "Tidx"
+    value {
+      type: DT_INT32
+    }
+  }
+  attr {
+    key: "output_type"
+    value {
+      type: DT_INT64
+    }
+  }
+}
+node {
+  name: "metrics/accuracy/Cast"
+  op: "Cast"
+  input: "metrics/accuracy/ArgMax"
+  attr {
+    key: "DstT"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "SrcT"
+    value {
+      type: DT_INT64
+    }
+  }
+  attr {
+    key: "Truncate"
+    value {
+      b: false
+    }
+  }
+}
+node {
+  name: "metrics/accuracy/Equal"
+  op: "Equal"
+  input: "metrics/accuracy/Squeeze"
+  input: "metrics/accuracy/Cast"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "incompatible_shape_error"
+    value {
+      b: true
+    }
+  }
+}
+node {
+  name: "metrics/accuracy/Cast_1"
+  op: "Cast"
+  input: "metrics/accuracy/Equal"
+  attr {
+    key: "DstT"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "SrcT"
+    value {
+      type: DT_BOOL
+    }
+  }
+  attr {
+    key: "Truncate"
+    value {
+      b: false
+    }
+  }
+}
+node {
+  name: "metrics/accuracy/Const"
+  op: "Const"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_INT32
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_INT32
+        tensor_shape {
+          dim {
+            size: 1
+          }
+        }
+        int_val: 0
+      }
+    }
+  }
+}
+node {
+  name: "metrics/accuracy/Sum"
+  op: "Sum"
+  input: "metrics/accuracy/Cast_1"
+  input: "metrics/accuracy/Const"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "Tidx"
+    value {
+      type: DT_INT32
+    }
+  }
+  attr {
+    key: "keep_dims"
+    value {
+      b: false
+    }
+  }
+}
+node {
+  name: "metrics/accuracy/AssignAddVariableOp"
+  op: "AssignAddVariableOp"
+  input: "total"
+  input: "metrics/accuracy/Sum"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+}
+node {
+  name: "metrics/accuracy/ReadVariableOp"
+  op: "ReadVariableOp"
+  input: "total"
+  input: "^metrics/accuracy/AssignAddVariableOp"
+  input: "^metrics/accuracy/Sum"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+}
+node {
+  name: "metrics/accuracy/Size"
+  op: "Size"
+  input: "metrics/accuracy/Cast_1"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "out_type"
+    value {
+      type: DT_INT32
+    }
+  }
+}
+node {
+  name: "metrics/accuracy/Cast_2"
+  op: "Cast"
+  input: "metrics/accuracy/Size"
+  attr {
+    key: "DstT"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "SrcT"
+    value {
+      type: DT_INT32
+    }
+  }
+  attr {
+    key: "Truncate"
+    value {
+      b: false
+    }
+  }
+}
+node {
+  name: "metrics/accuracy/AssignAddVariableOp_1"
+  op: "AssignAddVariableOp"
+  input: "count"
+  input: "metrics/accuracy/Cast_2"
+  input: "^metrics/accuracy/AssignAddVariableOp"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+}
+node {
+  name: "metrics/accuracy/ReadVariableOp_1"
+  op: "ReadVariableOp"
+  input: "count"
+  input: "^metrics/accuracy/AssignAddVariableOp"
+  input: "^metrics/accuracy/AssignAddVariableOp_1"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+}
+node {
+  name: "metrics/accuracy/div_no_nan/ReadVariableOp"
+  op: "ReadVariableOp"
+  input: "total"
+  input: "^metrics/accuracy/AssignAddVariableOp_1"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+}
+node {
+  name: "metrics/accuracy/div_no_nan/ReadVariableOp_1"
+  op: "ReadVariableOp"
+  input: "count"
+  input: "^metrics/accuracy/AssignAddVariableOp_1"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+}
+node {
+  name: "metrics/accuracy/div_no_nan"
+  op: "DivNoNan"
+  input: "metrics/accuracy/div_no_nan/ReadVariableOp"
+  input: "metrics/accuracy/div_no_nan/ReadVariableOp_1"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+}
+node {
+  name: "metrics/accuracy/Identity"
+  op: "Identity"
+  input: "metrics/accuracy/div_no_nan"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+}
+node {
+  name: "loss/dense_1_loss/Cast"
+  op: "Cast"
+  input: "dense_1_target"
+  attr {
+    key: "DstT"
+    value {
+      type: DT_INT64
+    }
+  }
+  attr {
+    key: "SrcT"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "Truncate"
+    value {
+      b: false
+    }
+  }
+}
+node {
+  name: "loss/dense_1_loss/Shape"
+  op: "Shape"
+  input: "dense_1/BiasAdd"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "out_type"
+    value {
+      type: DT_INT32
+    }
+  }
+}
+node {
+  name: "loss/dense_1_loss/Reshape/shape"
+  op: "Const"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_INT32
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_INT32
+        tensor_shape {
+          dim {
+            size: 1
+          }
+        }
+        int_val: -1
+      }
+    }
+  }
+}
+node {
+  name: "loss/dense_1_loss/Reshape"
+  op: "Reshape"
+  input: "loss/dense_1_loss/Cast"
+  input: "loss/dense_1_loss/Reshape/shape"
+  attr {
+    key: "T"
+    value {
+      type: DT_INT64
+    }
+  }
+  attr {
+    key: "Tshape"
+    value {
+      type: DT_INT32
+    }
+  }
+}
+node {
+  name: "loss/dense_1_loss/strided_slice/stack"
+  op: "Const"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_INT32
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_INT32
+        tensor_shape {
+          dim {
+            size: 1
+          }
+        }
+        int_val: -1
+      }
+    }
+  }
+}
+node {
+  name: "loss/dense_1_loss/strided_slice/stack_1"
+  op: "Const"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_INT32
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_INT32
+        tensor_shape {
+          dim {
+            size: 1
+          }
+        }
+        int_val: 0
+      }
+    }
+  }
+}
+node {
+  name: "loss/dense_1_loss/strided_slice/stack_2"
+  op: "Const"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_INT32
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_INT32
+        tensor_shape {
+          dim {
+            size: 1
+          }
+        }
+        int_val: 1
+      }
+    }
+  }
+}
+node {
+  name: "loss/dense_1_loss/strided_slice"
+  op: "StridedSlice"
+  input: "loss/dense_1_loss/Shape"
+  input: "loss/dense_1_loss/strided_slice/stack"
+  input: "loss/dense_1_loss/strided_slice/stack_1"
+  input: "loss/dense_1_loss/strided_slice/stack_2"
+  attr {
+    key: "Index"
+    value {
+      type: DT_INT32
+    }
+  }
+  attr {
+    key: "T"
+    value {
+      type: DT_INT32
+    }
+  }
+  attr {
+    key: "begin_mask"
+    value {
+      i: 0
+    }
+  }
+  attr {
+    key: "ellipsis_mask"
+    value {
+      i: 0
+    }
+  }
+  attr {
+    key: "end_mask"
+    value {
+      i: 0
+    }
+  }
+  attr {
+    key: "new_axis_mask"
+    value {
+      i: 0
+    }
+  }
+  attr {
+    key: "shrink_axis_mask"
+    value {
+      i: 1
+    }
+  }
+}
+node {
+  name: "loss/dense_1_loss/Reshape_1/shape/0"
+  op: "Const"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_INT32
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_INT32
+        tensor_shape {
+        }
+        int_val: -1
+      }
+    }
+  }
+}
+node {
+  name: "loss/dense_1_loss/Reshape_1/shape"
+  op: "Pack"
+  input: "loss/dense_1_loss/Reshape_1/shape/0"
+  input: "loss/dense_1_loss/strided_slice"
+  attr {
+    key: "N"
+    value {
+      i: 2
+    }
+  }
+  attr {
+    key: "T"
+    value {
+      type: DT_INT32
+    }
+  }
+  attr {
+    key: "axis"
+    value {
+      i: 0
+    }
+  }
+}
+node {
+  name: "loss/dense_1_loss/Reshape_1"
+  op: "Reshape"
+  input: "dense_1/BiasAdd"
+  input: "loss/dense_1_loss/Reshape_1/shape"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "Tshape"
+    value {
+      type: DT_INT32
+    }
+  }
+}
+node {
+  name: "loss/dense_1_loss/SparseSoftmaxCrossEntropyWithLogits/Shape"
+  op: "Shape"
+  input: "loss/dense_1_loss/Reshape"
+  attr {
+    key: "T"
+    value {
+      type: DT_INT64
+    }
+  }
+  attr {
+    key: "out_type"
+    value {
+      type: DT_INT32
+    }
+  }
+}
+node {
+  name: "loss/dense_1_loss/SparseSoftmaxCrossEntropyWithLogits/SparseSoftmaxCrossEntropyWithLogits"
+  op: "SparseSoftmaxCrossEntropyWithLogits"
+  input: "loss/dense_1_loss/Reshape_1"
+  input: "loss/dense_1_loss/Reshape"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "Tlabels"
+    value {
+      type: DT_INT64
+    }
+  }
+}
+node {
+  name: "loss/dense_1_loss/weighted_loss/Cast/x"
+  op: "Const"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_FLOAT
+        tensor_shape {
+        }
+        float_val: 1.0
+      }
+    }
+  }
+}
+node {
+  name: "loss/dense_1_loss/weighted_loss/broadcast_weights/assert_broadcastable/weights/shape"
+  op: "Const"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_INT32
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_INT32
+        tensor_shape {
+          dim {
+          }
+        }
+      }
+    }
+  }
+}
+node {
+  name: "loss/dense_1_loss/weighted_loss/broadcast_weights/assert_broadcastable/weights/rank"
+  op: "Const"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_INT32
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_INT32
+        tensor_shape {
+        }
+        int_val: 0
+      }
+    }
+  }
+}
+node {
+  name: "loss/dense_1_loss/weighted_loss/broadcast_weights/assert_broadcastable/values/shape"
+  op: "Shape"
+  input: "loss/dense_1_loss/SparseSoftmaxCrossEntropyWithLogits/SparseSoftmaxCrossEntropyWithLogits"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "out_type"
+    value {
+      type: DT_INT32
+    }
+  }
+}
+node {
+  name: "loss/dense_1_loss/weighted_loss/broadcast_weights/assert_broadcastable/values/rank"
+  op: "Const"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_INT32
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_INT32
+        tensor_shape {
+        }
+        int_val: 1
+      }
+    }
+  }
+}
+node {
+  name: "loss/dense_1_loss/weighted_loss/broadcast_weights/assert_broadcastable/static_scalar_check_success"
+  op: "NoOp"
+}
+node {
+  name: "loss/dense_1_loss/weighted_loss/broadcast_weights/ones_like/Shape"
+  op: "Shape"
+  input: "loss/dense_1_loss/SparseSoftmaxCrossEntropyWithLogits/SparseSoftmaxCrossEntropyWithLogits"
+  input: "^loss/dense_1_loss/weighted_loss/broadcast_weights/assert_broadcastable/static_scalar_check_success"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "out_type"
+    value {
+      type: DT_INT32
+    }
+  }
+}
+node {
+  name: "loss/dense_1_loss/weighted_loss/broadcast_weights/ones_like/Const"
+  op: "Const"
+  input: "^loss/dense_1_loss/weighted_loss/broadcast_weights/assert_broadcastable/static_scalar_check_success"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_FLOAT
+        tensor_shape {
+        }
+        float_val: 1.0
+      }
+    }
+  }
+}
+node {
+  name: "loss/dense_1_loss/weighted_loss/broadcast_weights/ones_like"
+  op: "Fill"
+  input: "loss/dense_1_loss/weighted_loss/broadcast_weights/ones_like/Shape"
+  input: "loss/dense_1_loss/weighted_loss/broadcast_weights/ones_like/Const"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "index_type"
+    value {
+      type: DT_INT32
+    }
+  }
+}
+node {
+  name: "loss/dense_1_loss/weighted_loss/broadcast_weights"
+  op: "Mul"
+  input: "loss/dense_1_loss/weighted_loss/Cast/x"
+  input: "loss/dense_1_loss/weighted_loss/broadcast_weights/ones_like"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+}
+node {
+  name: "loss/dense_1_loss/weighted_loss/Mul"
+  op: "Mul"
+  input: "loss/dense_1_loss/SparseSoftmaxCrossEntropyWithLogits/SparseSoftmaxCrossEntropyWithLogits"
+  input: "loss/dense_1_loss/weighted_loss/broadcast_weights"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+}
+node {
+  name: "loss/dense_1_loss/Const"
+  op: "Const"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_INT32
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_INT32
+        tensor_shape {
+          dim {
+            size: 1
+          }
+        }
+        int_val: 0
+      }
+    }
+  }
+}
+node {
+  name: "loss/dense_1_loss/Sum"
+  op: "Sum"
+  input: "loss/dense_1_loss/weighted_loss/Mul"
+  input: "loss/dense_1_loss/Const"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "Tidx"
+    value {
+      type: DT_INT32
+    }
+  }
+  attr {
+    key: "keep_dims"
+    value {
+      b: false
+    }
+  }
+}
+node {
+  name: "loss/dense_1_loss/num_elements"
+  op: "Size"
+  input: "loss/dense_1_loss/weighted_loss/Mul"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "out_type"
+    value {
+      type: DT_INT32
+    }
+  }
+}
+node {
+  name: "loss/dense_1_loss/num_elements/Cast"
+  op: "Cast"
+  input: "loss/dense_1_loss/num_elements"
+  attr {
+    key: "DstT"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "SrcT"
+    value {
+      type: DT_INT32
+    }
+  }
+  attr {
+    key: "Truncate"
+    value {
+      b: false
+    }
+  }
+}
+node {
+  name: "loss/dense_1_loss/Const_1"
+  op: "Const"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_INT32
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_INT32
+        tensor_shape {
+          dim {
+          }
+        }
+      }
+    }
+  }
+}
+node {
+  name: "loss/dense_1_loss/Sum_1"
+  op: "Sum"
+  input: "loss/dense_1_loss/Sum"
+  input: "loss/dense_1_loss/Const_1"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "Tidx"
+    value {
+      type: DT_INT32
+    }
+  }
+  attr {
+    key: "keep_dims"
+    value {
+      b: false
+    }
+  }
+}
+node {
+  name: "loss/dense_1_loss/value"
+  op: "DivNoNan"
+  input: "loss/dense_1_loss/Sum_1"
+  input: "loss/dense_1_loss/num_elements/Cast"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+}
+node {
+  name: "loss/mul/x"
+  op: "Const"
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_FLOAT
+        tensor_shape {
+        }
+        float_val: 1.0
+      }
+    }
+  }
+}
+node {
+  name: "loss/mul"
+  op: "Mul"
+  input: "loss/mul/x"
+  input: "loss/dense_1_loss/value"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+}
+library {
+  function {
+    signature {
+      name: "dropout_cond_false_26"
+      input_arg {
+        name: "identity_dense_relu"
+        type: DT_FLOAT
+      }
+      output_arg {
+        name: "identity"
+        type: DT_FLOAT
+      }
+      output_arg {
+        name: "optionalnone"
+        type: DT_VARIANT
+      }
+      output_arg {
+        name: "optionalnone_1"
+        type: DT_VARIANT
+      }
+      output_arg {
+        name: "optionalnone_2"
+        type: DT_VARIANT
+      }
+      output_arg {
+        name: "optionalnone_3"
+        type: DT_VARIANT
+      }
+      output_arg {
+        name: "optionalnone_4"
+        type: DT_VARIANT
+      }
+      output_arg {
+        name: "optionalnone_5"
+        type: DT_VARIANT
+      }
+      output_arg {
+        name: "optionalnone_6"
+        type: DT_VARIANT
+      }
+      output_arg {
+        name: "optionalnone_7"
+        type: DT_VARIANT
+      }
+      output_arg {
+        name: "optionalnone_8"
+        type: DT_VARIANT
+      }
+      output_arg {
+        name: "optionalnone_9"
+        type: DT_VARIANT
+      }
+      output_arg {
+        name: "optionalnone_10"
+        type: DT_VARIANT
+      }
+      output_arg {
+        name: "optionalnone_11"
+        type: DT_VARIANT
+      }
+      output_arg {
+        name: "optionalnone_12"
+        type: DT_VARIANT
+      }
+      output_arg {
+        name: "optionalnone_13"
+        type: DT_VARIANT
+      }
+      output_arg {
+        name: "optionalnone_14"
+        type: DT_VARIANT
+      }
+    }
+    node_def {
+      name: "Identity"
+      op: "Identity"
+      input: "identity_dense_relu"
+      attr {
+        key: "T"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "Identity"
+      }
+    }
+    node_def {
+      name: "OptionalNone"
+      op: "OptionalNone"
+      experimental_debug_info {
+        original_node_names: "OptionalNone"
+      }
+    }
+    node_def {
+      name: "OptionalNone_1"
+      op: "OptionalNone"
+      experimental_debug_info {
+        original_node_names: "OptionalNone_1"
+      }
+    }
+    node_def {
+      name: "OptionalNone_2"
+      op: "OptionalNone"
+      experimental_debug_info {
+        original_node_names: "OptionalNone_2"
+      }
+    }
+    node_def {
+      name: "OptionalNone_3"
+      op: "OptionalNone"
+      experimental_debug_info {
+        original_node_names: "OptionalNone_3"
+      }
+    }
+    node_def {
+      name: "OptionalNone_4"
+      op: "OptionalNone"
+      experimental_debug_info {
+        original_node_names: "OptionalNone_4"
+      }
+    }
+    node_def {
+      name: "OptionalNone_5"
+      op: "OptionalNone"
+      experimental_debug_info {
+        original_node_names: "OptionalNone_5"
+      }
+    }
+    node_def {
+      name: "OptionalNone_6"
+      op: "OptionalNone"
+      experimental_debug_info {
+        original_node_names: "OptionalNone_6"
+      }
+    }
+    node_def {
+      name: "OptionalNone_7"
+      op: "OptionalNone"
+      experimental_debug_info {
+        original_node_names: "OptionalNone_7"
+      }
+    }
+    node_def {
+      name: "OptionalNone_8"
+      op: "OptionalNone"
+      experimental_debug_info {
+        original_node_names: "OptionalNone_8"
+      }
+    }
+    node_def {
+      name: "OptionalNone_9"
+      op: "OptionalNone"
+      experimental_debug_info {
+        original_node_names: "OptionalNone_9"
+      }
+    }
+    node_def {
+      name: "OptionalNone_10"
+      op: "OptionalNone"
+      experimental_debug_info {
+        original_node_names: "OptionalNone_10"
+      }
+    }
+    node_def {
+      name: "OptionalNone_11"
+      op: "OptionalNone"
+      experimental_debug_info {
+        original_node_names: "OptionalNone_11"
+      }
+    }
+    node_def {
+      name: "OptionalNone_12"
+      op: "OptionalNone"
+      experimental_debug_info {
+        original_node_names: "OptionalNone_12"
+      }
+    }
+    node_def {
+      name: "OptionalNone_13"
+      op: "OptionalNone"
+      experimental_debug_info {
+        original_node_names: "OptionalNone_13"
+      }
+    }
+    node_def {
+      name: "OptionalNone_14"
+      op: "OptionalNone"
+      experimental_debug_info {
+        original_node_names: "OptionalNone_14"
+      }
+    }
+    ret {
+      key: "identity"
+      value: "Identity:output:0"
+    }
+    ret {
+      key: "optionalnone"
+      value: "OptionalNone:optional:0"
+    }
+    ret {
+      key: "optionalnone_1"
+      value: "OptionalNone_1:optional:0"
+    }
+    ret {
+      key: "optionalnone_10"
+      value: "OptionalNone_10:optional:0"
+    }
+    ret {
+      key: "optionalnone_11"
+      value: "OptionalNone_11:optional:0"
+    }
+    ret {
+      key: "optionalnone_12"
+      value: "OptionalNone_12:optional:0"
+    }
+    ret {
+      key: "optionalnone_13"
+      value: "OptionalNone_13:optional:0"
+    }
+    ret {
+      key: "optionalnone_14"
+      value: "OptionalNone_14:optional:0"
+    }
+    ret {
+      key: "optionalnone_2"
+      value: "OptionalNone_2:optional:0"
+    }
+    ret {
+      key: "optionalnone_3"
+      value: "OptionalNone_3:optional:0"
+    }
+    ret {
+      key: "optionalnone_4"
+      value: "OptionalNone_4:optional:0"
+    }
+    ret {
+      key: "optionalnone_5"
+      value: "OptionalNone_5:optional:0"
+    }
+    ret {
+      key: "optionalnone_6"
+      value: "OptionalNone_6:optional:0"
+    }
+    ret {
+      key: "optionalnone_7"
+      value: "OptionalNone_7:optional:0"
+    }
+    ret {
+      key: "optionalnone_8"
+      value: "OptionalNone_8:optional:0"
+    }
+    ret {
+      key: "optionalnone_9"
+      value: "OptionalNone_9:optional:0"
+    }
+  }
+  function {
+    signature {
+      name: "dropout_cond_true_25"
+      input_arg {
+        name: "dropout_shape_dense_relu"
+        type: DT_FLOAT
+      }
+      output_arg {
+        name: "dropout_mul_1"
+        type: DT_FLOAT
+      }
+      output_arg {
+        name: "optionalfromvalue"
+        type: DT_VARIANT
+      }
+      output_arg {
+        name: "optionalfromvalue_1"
+        type: DT_VARIANT
+      }
+      output_arg {
+        name: "optionalfromvalue_2"
+        type: DT_VARIANT
+      }
+      output_arg {
+        name: "optionalfromvalue_3"
+        type: DT_VARIANT
+      }
+      output_arg {
+        name: "optionalfromvalue_4"
+        type: DT_VARIANT
+      }
+      output_arg {
+        name: "optionalfromvalue_5"
+        type: DT_VARIANT
+      }
+      output_arg {
+        name: "optionalfromvalue_6"
+        type: DT_VARIANT
+      }
+      output_arg {
+        name: "optionalfromvalue_7"
+        type: DT_VARIANT
+      }
+      output_arg {
+        name: "optionalfromvalue_8"
+        type: DT_VARIANT
+      }
+      output_arg {
+        name: "optionalfromvalue_9"
+        type: DT_VARIANT
+      }
+      output_arg {
+        name: "optionalfromvalue_10"
+        type: DT_VARIANT
+      }
+      output_arg {
+        name: "optionalfromvalue_11"
+        type: DT_VARIANT
+      }
+      output_arg {
+        name: "optionalfromvalue_12"
+        type: DT_VARIANT
+      }
+      output_arg {
+        name: "optionalfromvalue_13"
+        type: DT_VARIANT
+      }
+      output_arg {
+        name: "optionalfromvalue_14"
+        type: DT_VARIANT
+      }
+      is_stateful: true
+    }
+    node_def {
+      name: "dropout/rate"
+      op: "Const"
+      attr {
+        key: "dtype"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      attr {
+        key: "value"
+        value {
+          tensor {
+            dtype: DT_FLOAT
+            tensor_shape {
+            }
+            float_val: 0.20000000298023224
+          }
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "dropout/rate"
+      }
+    }
+    node_def {
+      name: "dropout/Shape"
+      op: "Shape"
+      input: "dropout_shape_dense_relu"
+      attr {
+        key: "T"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      attr {
+        key: "out_type"
+        value {
+          type: DT_INT32
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "dropout/Shape"
+      }
+    }
+    node_def {
+      name: "dropout/random_uniform/min"
+      op: "Const"
+      attr {
+        key: "dtype"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      attr {
+        key: "value"
+        value {
+          tensor {
+            dtype: DT_FLOAT
+            tensor_shape {
+            }
+            float_val: 0.0
+          }
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "dropout/random_uniform/min"
+      }
+    }
+    node_def {
+      name: "dropout/random_uniform/max"
+      op: "Const"
+      attr {
+        key: "dtype"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      attr {
+        key: "value"
+        value {
+          tensor {
+            dtype: DT_FLOAT
+            tensor_shape {
+            }
+            float_val: 1.0
+          }
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "dropout/random_uniform/max"
+      }
+    }
+    node_def {
+      name: "dropout/random_uniform/RandomUniform"
+      op: "RandomUniform"
+      input: "dropout/Shape:output:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_INT32
+        }
+      }
+      attr {
+        key: "dtype"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      attr {
+        key: "seed"
+        value {
+          i: 0
+        }
+      }
+      attr {
+        key: "seed2"
+        value {
+          i: 0
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "dropout/random_uniform/RandomUniform"
+      }
+    }
+    node_def {
+      name: "dropout/random_uniform/sub"
+      op: "Sub"
+      input: "dropout/random_uniform/max:output:0"
+      input: "dropout/random_uniform/min:output:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "dropout/random_uniform/sub"
+      }
+    }
+    node_def {
+      name: "dropout/random_uniform/mul"
+      op: "Mul"
+      input: "dropout/random_uniform/RandomUniform:output:0"
+      input: "dropout/random_uniform/sub:z:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "dropout/random_uniform/mul"
+      }
+    }
+    node_def {
+      name: "dropout/random_uniform"
+      op: "Add"
+      input: "dropout/random_uniform/mul:z:0"
+      input: "dropout/random_uniform/min:output:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "dropout/random_uniform"
+      }
+    }
+    node_def {
+      name: "dropout/sub/x"
+      op: "Const"
+      attr {
+        key: "dtype"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      attr {
+        key: "value"
+        value {
+          tensor {
+            dtype: DT_FLOAT
+            tensor_shape {
+            }
+            float_val: 1.0
+          }
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "dropout/sub/x"
+      }
+    }
+    node_def {
+      name: "dropout/sub"
+      op: "Sub"
+      input: "dropout/sub/x:output:0"
+      input: "dropout/rate:output:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "dropout/sub"
+      }
+    }
+    node_def {
+      name: "dropout/truediv/x"
+      op: "Const"
+      attr {
+        key: "dtype"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      attr {
+        key: "value"
+        value {
+          tensor {
+            dtype: DT_FLOAT
+            tensor_shape {
+            }
+            float_val: 1.0
+          }
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "dropout/truediv/x"
+      }
+    }
+    node_def {
+      name: "dropout/truediv"
+      op: "RealDiv"
+      input: "dropout/truediv/x:output:0"
+      input: "dropout/sub:z:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "dropout/truediv"
+      }
+    }
+    node_def {
+      name: "dropout/GreaterEqual"
+      op: "GreaterEqual"
+      input: "dropout/random_uniform:z:0"
+      input: "dropout/rate:output:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "dropout/GreaterEqual"
+      }
+    }
+    node_def {
+      name: "dropout/mul"
+      op: "Mul"
+      input: "dropout_shape_dense_relu"
+      input: "dropout/truediv:z:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "dropout/mul"
+      }
+    }
+    node_def {
+      name: "dropout/Cast"
+      op: "Cast"
+      input: "dropout/GreaterEqual:z:0"
+      attr {
+        key: "DstT"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      attr {
+        key: "SrcT"
+        value {
+          type: DT_BOOL
+        }
+      }
+      attr {
+        key: "Truncate"
+        value {
+          b: false
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "dropout/Cast"
+      }
+    }
+    node_def {
+      name: "dropout/mul_1"
+      op: "Mul"
+      input: "dropout/mul:z:0"
+      input: "dropout/Cast:y:0"
+      attr {
+        key: "T"
+        value {
+          type: DT_FLOAT
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "dropout/mul_1"
+      }
+    }
+    node_def {
+      name: "OptionalFromValue"
+      op: "OptionalFromValue"
+      input: "dropout/rate:output:0"
+      attr {
+        key: "Toutput_types"
+        value {
+          list {
+            type: DT_FLOAT
+          }
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "OptionalFromValue"
+      }
+    }
+    node_def {
+      name: "OptionalFromValue_1"
+      op: "OptionalFromValue"
+      input: "dropout/Shape:output:0"
+      attr {
+        key: "Toutput_types"
+        value {
+          list {
+            type: DT_INT32
+          }
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "OptionalFromValue_1"
+      }
+    }
+    node_def {
+      name: "OptionalFromValue_2"
+      op: "OptionalFromValue"
+      input: "dropout/random_uniform/min:output:0"
+      attr {
+        key: "Toutput_types"
+        value {
+          list {
+            type: DT_FLOAT
+          }
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "OptionalFromValue_2"
+      }
+    }
+    node_def {
+      name: "OptionalFromValue_3"
+      op: "OptionalFromValue"
+      input: "dropout/random_uniform/max:output:0"
+      attr {
+        key: "Toutput_types"
+        value {
+          list {
+            type: DT_FLOAT
+          }
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "OptionalFromValue_3"
+      }
+    }
+    node_def {
+      name: "OptionalFromValue_4"
+      op: "OptionalFromValue"
+      input: "dropout/random_uniform/RandomUniform:output:0"
+      attr {
+        key: "Toutput_types"
+        value {
+          list {
+            type: DT_FLOAT
+          }
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "OptionalFromValue_4"
+      }
+    }
+    node_def {
+      name: "OptionalFromValue_5"
+      op: "OptionalFromValue"
+      input: "dropout/random_uniform/sub:z:0"
+      attr {
+        key: "Toutput_types"
+        value {
+          list {
+            type: DT_FLOAT
+          }
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "OptionalFromValue_5"
+      }
+    }
+    node_def {
+      name: "OptionalFromValue_6"
+      op: "OptionalFromValue"
+      input: "dropout/random_uniform/mul:z:0"
+      attr {
+        key: "Toutput_types"
+        value {
+          list {
+            type: DT_FLOAT
+          }
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "OptionalFromValue_6"
+      }
+    }
+    node_def {
+      name: "OptionalFromValue_7"
+      op: "OptionalFromValue"
+      input: "dropout/random_uniform:z:0"
+      attr {
+        key: "Toutput_types"
+        value {
+          list {
+            type: DT_FLOAT
+          }
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "OptionalFromValue_7"
+      }
+    }
+    node_def {
+      name: "OptionalFromValue_8"
+      op: "OptionalFromValue"
+      input: "dropout/sub/x:output:0"
+      attr {
+        key: "Toutput_types"
+        value {
+          list {
+            type: DT_FLOAT
+          }
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "OptionalFromValue_8"
+      }
+    }
+    node_def {
+      name: "OptionalFromValue_9"
+      op: "OptionalFromValue"
+      input: "dropout/sub:z:0"
+      attr {
+        key: "Toutput_types"
+        value {
+          list {
+            type: DT_FLOAT
+          }
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "OptionalFromValue_9"
+      }
+    }
+    node_def {
+      name: "OptionalFromValue_10"
+      op: "OptionalFromValue"
+      input: "dropout/truediv/x:output:0"
+      attr {
+        key: "Toutput_types"
+        value {
+          list {
+            type: DT_FLOAT
+          }
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "OptionalFromValue_10"
+      }
+    }
+    node_def {
+      name: "OptionalFromValue_11"
+      op: "OptionalFromValue"
+      input: "dropout/truediv:z:0"
+      attr {
+        key: "Toutput_types"
+        value {
+          list {
+            type: DT_FLOAT
+          }
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "OptionalFromValue_11"
+      }
+    }
+    node_def {
+      name: "OptionalFromValue_12"
+      op: "OptionalFromValue"
+      input: "dropout/GreaterEqual:z:0"
+      attr {
+        key: "Toutput_types"
+        value {
+          list {
+            type: DT_BOOL
+          }
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "OptionalFromValue_12"
+      }
+    }
+    node_def {
+      name: "OptionalFromValue_13"
+      op: "OptionalFromValue"
+      input: "dropout/mul:z:0"
+      attr {
+        key: "Toutput_types"
+        value {
+          list {
+            type: DT_FLOAT
+          }
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "OptionalFromValue_13"
+      }
+    }
+    node_def {
+      name: "OptionalFromValue_14"
+      op: "OptionalFromValue"
+      input: "dropout/Cast:y:0"
+      attr {
+        key: "Toutput_types"
+        value {
+          list {
+            type: DT_FLOAT
+          }
+        }
+      }
+      experimental_debug_info {
+        original_node_names: "OptionalFromValue_14"
+      }
+    }
+    ret {
+      key: "dropout_mul_1"
+      value: "dropout/mul_1:z:0"
+    }
+    ret {
+      key: "optionalfromvalue"
+      value: "OptionalFromValue:optional:0"
+    }
+    ret {
+      key: "optionalfromvalue_1"
+      value: "OptionalFromValue_1:optional:0"
+    }
+    ret {
+      key: "optionalfromvalue_10"
+      value: "OptionalFromValue_10:optional:0"
+    }
+    ret {
+      key: "optionalfromvalue_11"
+      value: "OptionalFromValue_11:optional:0"
+    }
+    ret {
+      key: "optionalfromvalue_12"
+      value: "OptionalFromValue_12:optional:0"
+    }
+    ret {
+      key: "optionalfromvalue_13"
+      value: "OptionalFromValue_13:optional:0"
+    }
+    ret {
+      key: "optionalfromvalue_14"
+      value: "OptionalFromValue_14:optional:0"
+    }
+    ret {
+      key: "optionalfromvalue_2"
+      value: "OptionalFromValue_2:optional:0"
+    }
+    ret {
+      key: "optionalfromvalue_3"
+      value: "OptionalFromValue_3:optional:0"
+    }
+    ret {
+      key: "optionalfromvalue_4"
+      value: "OptionalFromValue_4:optional:0"
+    }
+    ret {
+      key: "optionalfromvalue_5"
+      value: "OptionalFromValue_5:optional:0"
+    }
+    ret {
+      key: "optionalfromvalue_6"
+      value: "OptionalFromValue_6:optional:0"
+    }
+    ret {
+      key: "optionalfromvalue_7"
+      value: "OptionalFromValue_7:optional:0"
+    }
+    ret {
+      key: "optionalfromvalue_8"
+      value: "OptionalFromValue_8:optional:0"
+    }
+    ret {
+      key: "optionalfromvalue_9"
+      value: "OptionalFromValue_9:optional:0"
+    }
+  }
+}
+versions {
+  producer: 175
+  min_consumer: 12
+}

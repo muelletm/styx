@@ -4,9 +4,11 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+
+
 setuptools.setup(
     name="stupid-bomelino", # Replace with your own username
-    version="0.0.5",
+    version="0.0.8",
     author="tino bomelino",
     author_email="tino@bomelino.de",
     description="AI helpers aber schön kurz",

@@ -150,7 +150,7 @@ class Node:
 	def pretty(self):
 		s = self._pretty(1)
 		print(s)
-		return s
+
 
 	def copy(self):
 		t = Node(self.name,self.parent,self.root)
