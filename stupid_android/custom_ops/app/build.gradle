@@ -6,7 +6,7 @@ android {
 
     defaultConfig {
         applicationId = 'com.example.hellolibs'
-        minSdkVersion 16
+        minSdkVersion 19
         targetSdkVersion 28
         versionCode = 1
         versionName = '1.0'
@@ -46,6 +46,8 @@ android {
 
 dependencies {
     implementation 'com.android.support:appcompat-v7:28.0.0'
+    implementation 'org.tensorflow:tensorflow-lite-task-vision:0.0.0-nightly'
+    implementation 'org.tensorflow:tensorflow-lite-task-text:0.0.0-nightly'
     // uncomment out this one to generate lib binaries,
     // and also uncommented out the one in settings.gradle
     // after lib is generated, just comment them out again

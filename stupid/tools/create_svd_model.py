@@ -11,17 +11,19 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    offset = tf.Variable(0.0)
-
-    # Define a simple model which just contains a custom operator named `Sin`
-    @tf.function
-    def sin(x):
-        return tf.sin(x + offset, name="Sin")
+    def svd(x):
+        s, u, _ = tf.linalg.svd(x)
+        return s, u
 
 
-    xs = [-8, 0.5, 2, 2.2, 201]
+    def build_model(batch_size=1):
+        inputs = tf.keras.layers.Input(name="input", shape=[None, None], batch_size=1)
+        outputs = svd(inputs)
+        return tf.keras.Model(inputs=inputs, outputs=outputs)
 
-    converter = tf.lite.TFLiteConverter.from_concrete_functions([sin.get_concrete_function(xs)])
+    model = build_model()
+
+    converter = tf.lite.TFLiteConverter.from_keras_model(model)
     converter.allow_custom_ops = True
     tflite_model = converter.convert()
 
