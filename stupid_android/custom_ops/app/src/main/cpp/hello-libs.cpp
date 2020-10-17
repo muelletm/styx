@@ -94,31 +94,31 @@ std::string RunInterpreter() {
     auto model = tflite::FlatBufferModel::BuildFromFile(kModelFile);
     if (model == nullptr) {
         LOGE("No such file: %s", kModelFile);
-        return "ERROR";
+        return "ERROR: No such file: '" + std::string(kModelFile) + "'";
     }
     // Create an Interpreter with an InterpreterBuilder.
     std::unique_ptr<Interpreter> interpreter;
     tflite::ops::builtin::BuiltinOpResolver resolver;
     if (InterpreterBuilder(*model, resolver)(&interpreter) != kTfLiteOk) {
         LOGE("Cannot build interpreter");
-        return "ERROR";
+        return "ERROR: Cannot build interpreter";
     }
 
     if (interpreter->ResizeInputTensor(0, {1}) != kTfLiteOk) {
         LOGE("Cannot resize input tensors");
-        return "ERROR";
+        return "ERROR: Cannot resize input tensors";
     }
 
     if (interpreter->AllocateTensors() != kTfLiteOk) {
         LOGE("Cannot allocate tensors");
-        return "ERROR";
+        return "ERROR: Cannot allocate tensors";
     }
 
     interpreter->typed_tensor<float>(0)[0] = 1.0;
 
     if (interpreter->Invoke() != kTfLiteOk) {
         LOGE("Cannot invoke");
-        return "ERROR";
+        return "ERROR: Cannot invoke";
     }
 
     float output = interpreter->typed_output_tensor<float>(0)[0];
