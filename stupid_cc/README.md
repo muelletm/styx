@@ -24,11 +24,20 @@ ln -s bazelisk.py bazelisk/bazel
 export "PATH=$PATH:$PWD/bazelisk"
 ```
 
-### Configure:
+### Install TF deps
 
 ```bash
-$ python3 -m venv venv
+sudo apt install python3-dev python3-pip
+python3 -m venv venv
 source venv/bin/activate
+pip install -U pip numpy wheel
+pip install -U keras_preprocessing --no-deps
+./configure
+```
+
+### Configure
+
+```bash
 ./configure
 ```
 
