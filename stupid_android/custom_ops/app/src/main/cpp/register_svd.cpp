@@ -27,66 +27,6 @@ namespace tflite {
     namespace ops {
         namespace custom {
 
-            TfLiteStatus SvdPrepare(TfLiteContext *context, TfLiteNode *node) {
-                LOGI("Prepare SVD");
-                TF_LITE_ENSURE_EQ(context, NumInputs(node), 1);
-                TF_LITE_ENSURE_EQ(context, NumOutputs(node), 3);
-                const TfLiteTensor *matrix = GetInput(context, node, 0);
-                TfLiteTensor *s = GetOutput(context, node, 0);
-                TfLiteTensor *u = GetOutput(context, node, 1);
-                TfLiteTensor *v = GetOutput(context, node, 2);
-
-                int num_dims = NumDimensions(matrix);
-
-                TfLiteIntArray *s_output_size = TfLiteIntArrayCreate(num_dims - 1);
-                for (int i = 0; i < num_dims - 1; ++i) {
-                    s_output_size->data[i] = matrix->dims->data[i];
-                }
-
-                TfLiteIntArray *u_output_size = TfLiteIntArrayCreate(num_dims);
-                for (int i = 0; i < num_dims; ++i) {
-                    u_output_size->data[i] = matrix->dims->data[i];
-                }
-
-                TfLiteIntArray *v_output_size = TfLiteIntArrayCreate(num_dims);
-                for (int i = 0; i < num_dims; ++i) {
-                    v_output_size->data[i] = matrix->dims->data[i];
-                }
-
-                TfLiteStatus status = context->ResizeTensor(context, s, s_output_size);
-                if (status != kTfLiteOk) {
-                    return status;
-                }
-                status = context->ResizeTensor(context, u, u_output_size);
-                if (status != kTfLiteOk) {
-                    return status;
-                }
-                status = context->ResizeTensor(context, v, v_output_size);
-                return status;
-            }
-
-            void SetToZero(float *data, TfLiteTensor *tensor) {
-                size_t count = 1;
-                int num_dims = NumDimensions(tensor);
-                for (int i = 0; i < num_dims; ++i) {
-                    count *= tensor->dims->data[i];
-                }
-                for (size_t i = 0; i < count; ++i) {
-                    data[i] = 0.0;
-                }
-            }
-
-            void Copy(float *src, float *trg, TfLiteTensor *tensor) {
-                size_t count = 1;
-                int num_dims = NumDimensions(tensor);
-                for (int i = 0; i < num_dims; ++i) {
-                    count *= tensor->dims->data[i];
-                }
-                for (size_t i = 0; i < count; ++i) {
-                    trg[i] = src[i];
-                }
-            }
-
             bool get2dShape(const TfLiteTensor &tensor, std::vector<int> *shape) {
                 if (tensor.dims->size == 2) {
                     *shape = {tensor.dims->data[0], tensor.dims->data[1]};
@@ -105,6 +45,56 @@ namespace tflite {
                 return false;
             }
 
+            TfLiteStatus SvdPrepare(TfLiteContext *context, TfLiteNode *node) {
+                LOGI("Prepare SVD");
+                TF_LITE_ENSURE_EQ(context, NumInputs(node), 1);
+                TF_LITE_ENSURE_EQ(context, NumOutputs(node), 3);
+                const TfLiteTensor *input = GetInput(context, node, 0);
+
+                std::vector<int> input_shape;
+                if(!get2dShape(*input, &input_shape)) {
+                    return kTfLiteError;
+                }
+                int num_rows = input_shape[0];
+                int num_cols = input_shape[1];
+                if (num_rows != num_cols) {
+                    LOGE("Non-quadratic shapes are not supported!");
+                    return kTfLiteError;
+                }
+
+                TfLiteTensor *s = GetOutput(context, node, 0);
+                TfLiteTensor *u = GetOutput(context, node, 1);
+                TfLiteTensor *v = GetOutput(context, node, 2);
+
+                int num_dims = NumDimensions(input);
+
+                TfLiteIntArray *s_output_size = TfLiteIntArrayCreate(num_dims - 1);
+                for (int i = 0; i < num_dims - 1; ++i) {
+                    s_output_size->data[i] = input->dims->data[i];
+                }
+
+                TfLiteIntArray *u_output_size = TfLiteIntArrayCreate(num_dims);
+                for (int i = 0; i < num_dims; ++i) {
+                    u_output_size->data[i] = input->dims->data[i];
+                }
+
+                TfLiteIntArray *v_output_size = TfLiteIntArrayCreate(num_dims);
+                for (int i = 0; i < num_dims; ++i) {
+                    v_output_size->data[i] = input->dims->data[i];
+                }
+
+                TfLiteStatus status = context->ResizeTensor(context, s, s_output_size);
+                if (status != kTfLiteOk) {
+                    return status;
+                }
+                status = context->ResizeTensor(context, u, u_output_size);
+                if (status != kTfLiteOk) {
+                    return status;
+                }
+                status = context->ResizeTensor(context, v, v_output_size);
+                return status;
+            }
+
             TfLiteStatus SvdEval(TfLiteContext *context, TfLiteNode *node) {
                 LOGI("Eval SVD");
                 using namespace tflite;
@@ -120,7 +110,7 @@ namespace tflite {
 
                 std::vector<int> input_shape;
                 if (!get2dShape(*input, &input_shape)) {
-                    return kTfLiteOk;
+                    return kTfLiteError;
                 }
                 int num_rows = input_shape[0];
                 int num_cols = input_shape[1];
