@@ -23,7 +23,6 @@ set(distribution_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../distribution)
 set(HOME_DIR                $ENV{HOME})
 set(TF_DIR                  ${HOME_DIR}/projects/tensorflow)
 set(FLATBUFFER_DIR          ${HOME_DIR}/projects/flatbuffers)
-#set(FLATBUFFER_DIR          ${TF_DIR}/tensorflow/contrib/lite/downloads/flatbuffers/include)
 set(TFLITE_LIB_DIR          ${CMAKE_CURRENT_SOURCE_DIR}/tflite/lib/${ANDROID_ABI})
 
 include_directories(
@@ -47,14 +46,14 @@ set_target_properties(lib_gperf PROPERTIES IMPORTED_LOCATION
 # build application's shared lib
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11")
 
-add_library(hello-libs SHARED
-            hello-libs.cpp)
+add_library(register-svd SHARED
+        register_svd.cpp)
 
-target_include_directories(hello-libs PRIVATE
+target_include_directories(register-svd PRIVATE
                            ${distribution_DIR}/gmath/include
                            ${distribution_DIR}/gperf/include)
 
-target_link_libraries(hello-libs
+target_link_libraries(register-svd
                       android
                       lib_gmath
                       lib_gperf
