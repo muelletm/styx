@@ -18,6 +18,15 @@ package com.example.hellolibs;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.TextView;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.Buffer;
+
 /*
  * Simple Java UI to trigger jni function. It is exactly same as Java code
  * in hello-jni.
@@ -28,10 +37,31 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         TextView tv = new TextView(this);
-        tv.setText( stringFromJNI() );
+
+        try {
+            InputStream is = getAssets().open("sin.tflite");
+            int size = is.available();
+            byte[] buffer = new byte[size];
+            is.read(buffer);
+            is.close();
+
+            File outputDir = getApplicationContext().getCacheDir();
+            File outputFile = File.createTempFile("sin", "tflite", outputDir);
+
+            try {
+                FileOutputStream stream = new FileOutputStream(outputFile);
+                stream.write(buffer);
+                stream.close();
+            }
+            catch (java.io.FileNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+            tv.setText( stringFromJNI(outputFile.getAbsolutePath()));
+        } catch (IOException e) {throw new RuntimeException(e);}
         setContentView(tv);
     }
-    public native String  stringFromJNI();
+
+    public native String  stringFromJNI(String filePath);
     static {
         System.loadLibrary("hello-libs");
     }
