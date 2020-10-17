@@ -23,11 +23,15 @@
 #include <mutex>
 #include <string>
 #include "tensorflow/lite/context.h"
+#include "tensorflow/lite/interpreter.h"
 #include "tensorflow/lite/kernels/kernel_util.h"
 #include "tensorflow/lite/kernels/register.h"
 
 #define LOGI(...) \
   ((void)__android_log_print(ANDROID_LOG_INFO, "hello-libs::", __VA_ARGS__))
+
+#define LOGE(...) \
+  ((void)__android_log_print(ANDROID_LOG_ERROR, "oh shit::", __VA_ARGS__))
 
 namespace tflite {
 namespace ops {
@@ -82,6 +86,46 @@ void Init() {
 
 }  // namespace custom
 }  // namespace ops
+
+std::string RunInterpreter() {
+    // Create model from file. Note that the model instance must outlive the
+    // interpreter instance.
+    constexpr char kModelFile[] = "";
+    auto model = tflite::FlatBufferModel::BuildFromFile(kModelFile);
+    if (model == nullptr) {
+        LOGE("No such file: %s", kModelFile);
+        return "ERROR";
+    }
+    // Create an Interpreter with an InterpreterBuilder.
+    std::unique_ptr<Interpreter> interpreter;
+    tflite::ops::builtin::BuiltinOpResolver resolver;
+    if (InterpreterBuilder(*model, resolver)(&interpreter) != kTfLiteOk) {
+        LOGE("Cannot build interpreter");
+        return "ERROR";
+    }
+
+    if (interpreter->ResizeInputTensor(0, {1}) != kTfLiteOk) {
+        LOGE("Cannot resize input tensors");
+        return "ERROR";
+    }
+
+    if (interpreter->AllocateTensors() != kTfLiteOk) {
+        LOGE("Cannot allocate tensors");
+        return "ERROR";
+    }
+
+    interpreter->typed_tensor<float>(0)[0] = 1.0;
+
+    if (interpreter->Invoke() != kTfLiteOk) {
+        LOGE("Cannot invoke");
+        return "ERROR";
+    }
+
+    float output = interpreter->typed_output_tensor<float>(0)[0];
+
+    return "SIN(1.0) = " + std::to_string(output) + ".";
+}
+
 }  // namespace tflite
 
 /* This is a trivial JNI example where we use a native method
@@ -93,21 +137,10 @@ void Init() {
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_example_hellolibs_MainActivity_stringFromJNI(JNIEnv *env, jobject thiz) {
     static std::once_flag onceFlag;
-    // Just for simplicity, we do this right away; correct way would do it in
-    // another thread...
-    auto ticks = GetTicks();
-
-    for (auto exp = 0; exp < 32; ++exp) {
-        volatile unsigned val = gpower(exp);
-        (void) val;  // to silence compiler warning
-    }
-    ticks = GetTicks() - ticks;
-
-    LOGI("calculation time: %" PRIu64, ticks);
-
     {
         std::call_once ( onceFlag, [ ]{ tflite::ops::custom::Init(); } );
     }
 
-    return env->NewStringUTF("Hello from JNI LIBS!");
+    std::string message = tflite::RunInterpreter();
+    return env->NewStringUTF(message.c_str());
 }
