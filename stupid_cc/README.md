@@ -1,5 +1,10 @@
 # TF-Lite C++ Custom Ops
 
+### Based on
+
+* https://www.tensorflow.org/lite/guide/android
+* http://www.sanj.ai/Android-App-With-Tflite-C++-API/
+
 ### Get Android NDK
 
 Download `android-ndk-r21d-linux-x86_64.zip` from https://developer.android.com/ndk/downloads.
@@ -16,7 +21,7 @@ cd tensorflow
 git checkout r2.3
 ```
 
-### Get Bazel and add it to `$PATH`.
+### Get Bazel and add it to `$PATH`
 
 ```bash
 git clone https://github.com/bazelbuild/bazelisk.git bazelisk
@@ -88,5 +93,29 @@ Please specify an Android build tools version to use. [Available versions: ['29.
 ### Build TF Lite
 
 ```
-bazel build -c opt --config=android_arm //tensorflow/lite:libtensorflowlite.so
+bazel build -c opt --config=android_arm64 //tensorflow/lite:libtensorflowlite.so
 ```
+
+```bash
+$ ll -h bazel-bin/tensorflow/lite/libtensorflowlite.so
+-r-xr-xr-x 1 thomas thomas 2.0M Okt 17 15:06 bazel-bin/tensorflow/lite/libtensorflowlite.so*
+```
+
+You now need to copy the so files for all platforms that should be supported:
+
+```
+$ find lib/
+total 24
+drwxrwxr-x  6 thomas thomas 4096 Okt 17 17:13 ./
+drwxrwxr-x 10 thomas thomas 4096 Okt 17 16:51 ../
+drwxrwxr-x  2 thomas thomas 4096 Okt 17 16:39 arm/
+drwxrwxr-x  2 thomas thomas 4096 Okt 17 16:43 arm64/
+lrwxrwxrwx  1 thomas thomas    5 Okt 17 17:13 arm64-v8a -> arm64/
+lrwxrwxrwx  1 thomas thomas    3 Okt 17 17:11 armeabi-v7a -> arm/
+drwxrwxr-x  2 thomas thomas 4096 Okt 17 16:50 x86/
+drwxrwxr-x  2 thomas thomas 4096 Okt 17 16:56 x86_64/
+```
+
+### Use in Android
+
+* https://codelabs.developers.google.com/codelabs/android-studio-cmake/index.html#1
