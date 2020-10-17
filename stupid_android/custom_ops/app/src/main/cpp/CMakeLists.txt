@@ -22,13 +22,14 @@ cmake_minimum_required(VERSION 3.4.1)
 set(distribution_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../distribution)
 set(HOME_DIR                $ENV{HOME})
 set(TF_DIR                  ${HOME_DIR}/projects/tensorflow)
+set(FLATBUFFER_DIR          ${HOME_DIR}/projects/flatbuffers)
 #set(FLATBUFFER_DIR          ${TF_DIR}/tensorflow/contrib/lite/downloads/flatbuffers/include)
 set(TFLITE_LIB_DIR          ${CMAKE_CURRENT_SOURCE_DIR}/tflite/lib/${ANDROID_ABI})
 
-#include_directories(
-#${FLATBUFFER_DIR}
-#${TF_DIR}
-#)
+include_directories(
+${FLATBUFFER_DIR}/include
+${TF_DIR}
+)
 
 link_directories(${TFLITE_LIB_DIR})
 find_library(libtensorflowlite tensorflowlite)

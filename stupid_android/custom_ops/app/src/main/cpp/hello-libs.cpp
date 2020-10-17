@@ -14,16 +14,75 @@
  * limitations under the License.
  *
  */
-#include <cstring>
-#include <jni.h>
-#include <cinttypes>
 #include <android/log.h>
+#include <cinttypes>
+#include <cstring>
 #include <gmath.h>
 #include <gperf.h>
+#include <jni.h>
+#include <mutex>
 #include <string>
+#include "tensorflow/lite/context.h"
+#include "tensorflow/lite/kernels/kernel_util.h"
+#include "tensorflow/lite/kernels/register.h"
 
 #define LOGI(...) \
   ((void)__android_log_print(ANDROID_LOG_INFO, "hello-libs::", __VA_ARGS__))
+
+namespace tflite {
+namespace ops {
+namespace custom {
+
+TfLiteStatus SinPrepare(TfLiteContext* context, TfLiteNode* node) {
+    TF_LITE_ENSURE_EQ(context, NumInputs(node), 1);
+    TF_LITE_ENSURE_EQ(context, NumOutputs(node), 1);
+    const TfLiteTensor* input = GetInput(context, node, 0);
+    TfLiteTensor* output = GetOutput(context, node, 0);
+
+    int num_dims = NumDimensions(input);
+
+    TfLiteIntArray* output_size = TfLiteIntArrayCreate(num_dims);
+    for (int i=0; i<num_dims; ++i) {
+        output_size->data[i] = input->dims->data[i];
+    }
+
+    return context->ResizeTensor(context, output, output_size);
+}
+
+TfLiteStatus SinEval(TfLiteContext* context, TfLiteNode* node) {
+    using namespace tflite;
+    const TfLiteTensor* input = GetInput(context, node,0);
+    TfLiteTensor* output = GetOutput(context, node,0);
+
+    float* input_data = input->data.f;
+    float* output_data = output->data.f;
+
+    size_t count = 1;
+    int num_dims = NumDimensions(input);
+    for (int i = 0; i < num_dims; ++i) {
+        count *= input->dims->data[i];
+    }
+
+    for (size_t i=0; i<count; ++i) {
+        output_data[i] = sin(input_data[i]);
+    }
+    return kTfLiteOk;
+}
+
+TfLiteRegistration* Register_SIN() {
+    static TfLiteRegistration r = {nullptr, nullptr, SinPrepare, SinEval};
+    return &r;
+}
+
+void Init() {
+    LOGI("Registering Sin.");
+    tflite::ops::builtin::BuiltinOpResolver resolver;
+    resolver.AddCustom("Sin", Register_SIN());
+}
+
+}  // namespace custom
+}  // namespace ops
+}  // namespace tflite
 
 /* This is a trivial JNI example where we use a native method
  * to return a new VM String. See the corresponding Java source
@@ -33,6 +92,7 @@
  */
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_example_hellolibs_MainActivity_stringFromJNI(JNIEnv *env, jobject thiz) {
+    static std::once_flag onceFlag;
     // Just for simplicity, we do this right away; correct way would do it in
     // another thread...
     auto ticks = GetTicks();
@@ -44,6 +104,10 @@ Java_com_example_hellolibs_MainActivity_stringFromJNI(JNIEnv *env, jobject thiz)
     ticks = GetTicks() - ticks;
 
     LOGI("calculation time: %" PRIu64, ticks);
+
+    {
+        std::call_once ( onceFlag, [ ]{ tflite::ops::custom::Init(); } );
+    }
 
     return env->NewStringUTF("Hello from JNI LIBS!");
 }
