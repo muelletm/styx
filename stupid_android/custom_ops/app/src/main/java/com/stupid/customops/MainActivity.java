@@ -1,51 +1,28 @@
 package com.stupid.customops;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
+import android.support.v7.app.AppCompatActivity;
 import android.widget.TextView;
 
-import org.tensorflow.lite.Interpreter;
-import org.tensorflow.lite.Tensor;
-
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.Buffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity {
 
-    static String CallTF(File modelFile) {
-        Interpreter interpreter = new Interpreter(modelFile);
+    class Tensor {
+        int[] shape;
+        float[] data;
 
-        assert interpreter.getInputTensorCount() == 1;
-        Tensor input = interpreter.getInputTensor(0);
-        assert input.numDimensions() == 3;
-
-        interpreter.resizeInput(0, new int[]{1 ,3, 3}, true);
-
-        interpreter.allocateTensors();
-
-        Object[] inputs =  {new float[]{0, 0, 1, 0, 1, 0, 1, 0, 0 }};
-
-
-        Map outputs = new HashMap<>();
-        outputs.put(0, FloatBuffer.allocate(3));
-        outputs.put(1, FloatBuffer.allocate(9));
-        outputs.put(2, FloatBuffer.allocate(9));
-
-        interpreter.runForMultipleInputsOutputs(inputs, outputs);
-        interpreter.close();
-
-        String output_message = outputs.toString();
-        return output_message;
+        @Override
+        public String toString() {
+            String output = "";
+            output += "shape: " + Arrays.toString(shape);
+            output += " data: " + Arrays.toString(data);
+            return output;
+        }
     }
 
     // Read SVD model from assets and write it to a temp file because C++ cannot access the assets.
@@ -75,7 +52,17 @@ public class MainActivity extends AppCompatActivity {
 
         String message;
         if (init_message.isEmpty()) {
-            message = runSvd();
+            Tensor input = new Tensor();
+            input.data = new float[]{1.f, 0.f, 1.f, 0.f, 1.f, 0.f, 1.f, 0.f, 0.f};
+            input.shape = new int[]{1, 3, 3};
+            Tensor s = new Tensor();
+            Tensor u = new Tensor();
+            message = runSvd(input, s, u);
+            if (message.isEmpty()) {
+                message += "input: " + input.toString() + "\n";
+                message += "s: " + s.toString() + "\n";
+                message += "u: " + u.toString() + "\n";
+            }
         } else {
             message = "Init failed: " + init_message;
         }
@@ -86,12 +73,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public native String initSvd(String model_path);
-    public native String runSvd();
+
+    public native String runSvd(Tensor input, Tensor s, Tensor u);
 
     static {
         System.loadLibrary("register-svd");
     }
-
 
 
 }

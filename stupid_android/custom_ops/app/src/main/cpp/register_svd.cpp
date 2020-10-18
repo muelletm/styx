@@ -52,7 +52,7 @@ namespace tflite {
                 const TfLiteTensor *input = GetInput(context, node, 0);
 
                 std::vector<int> input_shape;
-                if(!get2dShape(*input, &input_shape)) {
+                if (!get2dShape(*input, &input_shape)) {
                     return kTfLiteError;
                 }
                 int num_rows = input_shape[0];
@@ -171,57 +171,43 @@ namespace tflite {
                 return "";
             }
 
-            void appendTensor(const TfLiteTensor &tensor, float data[], const std::string &name,
-                              std::string &message) {
-                message += name;
-                message += " :";
-
-                int length = 1;
-                message += "shape = (";
-                for (int dim = 0; dim < tensor.dims->size; ++dim) {
-                    message += " " + std::to_string(tensor.dims->data[dim]);
-                    length *= tensor.dims->data[dim];
-                }
-                message += ")";
-
-                message += "[";
-                for (int i = 0; i < length; ++i) {
-                    message += " " + std::to_string(data[i]);
-                }
-                message += "]";
-            }
-
-            void appendOutput(const int index, const std::string &name, std::string &message) {
+            void populateOutput(JNIEnv *env, int index, jobject output) {
                 TfLiteTensor *tensor = interpreter_->output_tensor(index);
                 float *data = interpreter_->typed_output_tensor<float>(index);
-                appendTensor(*tensor, data, name, message);
+
+                int data_length = NumElements(tensor);
+                jfloatArray data_array = env->NewFloatArray(data_length);
+                env->SetFloatArrayRegion(data_array, 0, data_length, (jfloat *) data);
+
+                jclass tensor_class = env->GetObjectClass(output);
+                jfieldID dataID = env->GetFieldID(tensor_class, "data", "[F");
+                env->SetObjectField(output, dataID, data_array);
+
+                int shape_length = tensor->dims->size;
+                jintArray shape_array = env->NewIntArray(shape_length);
+                env->SetIntArrayRegion(shape_array, 0, shape_length, (jint *) tensor->dims->data);
+
+                jfieldID shapeID = env->GetFieldID(tensor_class, "shape", "[I");
+                env->SetObjectField(output, shapeID, shape_array);
             }
 
-            void appendInput(const int index, const std::string &name, std::string &message) {
-                TfLiteTensor *tensor = interpreter_->input_tensor(index);
-                float *data = interpreter_->typed_input_tensor<float>(index);
-                appendTensor(*tensor, data, name, message);
-            }
-
-            std::string runSvD() {
+            std::string
+            runSvD(JNIEnv *env, const std::vector<float> &input,
+                   const std::vector<int> &input_shape, jobject s,
+                   jobject u) {
                 if (interpreter_ == nullptr) {
                     return "ERROR: Interpreter is null.";
                 }
-                interpreter_->ResizeInputTensor(0, {1, 3, 3});
+                interpreter_->ResizeInputTensor(0, input_shape);
 
                 if (interpreter_->AllocateTensors() != kTfLiteOk) {
                     return "ERROR: Cannot allocate tensors";
                 }
 
-                float inputs[] = {1., 0., 1., 0., 1., 0., 1., 0., 0.};
-
                 float *input_data = interpreter_->typed_input_tensor<float>(0);
                 for (int i = 0; i < 9; i++) {
-                    input_data[i] = inputs[i];
+                    input_data[i] = input[i];
                 }
-
-                std::string message;
-                appendInput(0, "input: ", message);
 
                 if (interpreter_->Invoke() != kTfLiteOk) {
                     return "ERROR: Cannot invoke";
@@ -234,11 +220,9 @@ namespace tflite {
                            std::to_string(interpreter_->outputs().size());
                 }
 
-                appendOutput(0, "s", message);
-                message += "\n";
-                appendOutput(1, "u", message);
-                message += "\n";
-                return message;
+                populateOutput(env, 0, s);
+                populateOutput(env, 1, u);
+                return "";
             }
 
         }  // namespace custom
@@ -277,8 +261,48 @@ Java_com_stupid_customops_MainActivity_initSvd(JNIEnv *env, jobject thiz, jstrin
     return env->NewStringUTF(output.c_str());
 }
 
+std::vector<float> toFloatVec(JNIEnv *env, jfloatArray input) {
+    int input_length = env->GetArrayLength(input);
+    jfloat *body = env->GetFloatArrayElements(input, nullptr);
+    std::vector<float> input_vec(input_length);
+    for (int i = 0; i < input_length; i++)
+        input_vec[i] += body[i];
+    env->ReleaseFloatArrayElements(input, body, 0);
+    return input_vec;
+}
+
+std::vector<int> toIntVec(JNIEnv *env, jintArray input) {
+    int input_length = env->GetArrayLength(input);
+    jint *body = env->GetIntArrayElements(input, nullptr);
+    std::vector<int> input_vec(input_length);
+    for (int i = 0; i < input_length; i++)
+        input_vec[i] += body[i];
+    env->ReleaseIntArrayElements(input, body, 0);
+    return input_vec;
+}
+
+std::vector<int> GetIntVecField(JNIEnv *env, const jobject &input, const std::string &field_name) {
+    jclass tensor = env->GetObjectClass(input);
+    jfieldID fieldID = env->GetFieldID(tensor, field_name.c_str(), "[I");
+    jobject object = env->GetObjectField(input, fieldID);
+    jintArray *array = reinterpret_cast<jintArray *>(&object);
+    return toIntVec(env, *array);
+}
+
+std::vector<float>
+GetFloatVecField(JNIEnv *env, const jobject &input, const std::string &field_name) {
+    jclass tensor = env->GetObjectClass(input);
+    jfieldID fieldID = env->GetFieldID(tensor, field_name.c_str(), "[F");
+    jobject object = env->GetObjectField(input, fieldID);
+    jfloatArray *array = reinterpret_cast<jfloatArray *>(&object);
+    return toFloatVec(env, *array);
+}
+
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_stupid_customops_MainActivity_runSvd(JNIEnv *env, jobject thiz) {
-    std::string output = tflite::ops::custom::runSvD();
+Java_com_stupid_customops_MainActivity_runSvd(JNIEnv *env, jobject thiz, jobject input, jobject s,
+                                              jobject u) {
+    const std::vector<float> input_vec = GetFloatVecField(env, input, "data");
+    const std::vector<int> input_shape_vec = GetIntVecField(env, input, "shape");
+    std::string output = tflite::ops::custom::runSvD(env, input_vec, input_shape_vec, s, u);
     return env->NewStringUTF(output.c_str());
 }
