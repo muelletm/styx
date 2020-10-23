@@ -11,6 +11,7 @@ from . import checkpoint
 from . import layer
 from . import graph
 from .ops import * # das müsste ok sein, weil operations sehr spezielle namen haben und sich da nichts in die quere kommt
+
 from . import model
 import math
 import matplotlib.pyplot as plt
