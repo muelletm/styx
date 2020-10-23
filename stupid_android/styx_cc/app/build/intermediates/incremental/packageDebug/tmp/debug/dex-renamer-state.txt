@@ -1,4 +1,0 @@
-#Sun Oct 18 02:39:25 CEST 2020
-base.0=/home/thomas/PycharmProjects/stupid/stupid_android/custom_ops/app/build/intermediates/dex/debug/mergeDexDebug/classes.dex
-path.0=classes.dex
-renamed.0=classes.dex
