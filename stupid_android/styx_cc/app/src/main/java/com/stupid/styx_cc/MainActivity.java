@@ -20,7 +20,8 @@ public class MainActivity extends AppCompatActivity {
 
     private final static int PERM_REQUEST_CODE_ = 1;
     private final static int MAX_IMAGE_SIZE_ = 512;
-    private final static String MODEL_NAME_ = "fake_svd.tflite";
+    // fake.tflite, fake_svd.tflite, stupid_relu4.tflite
+    private final static String MODEL_NAME_ = "stupid_relu4.tflite";
 
     private TextView tv_;
     private ImageView image_;
