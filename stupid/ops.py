@@ -15,6 +15,9 @@ def wct(content, style, alpha=1, eps=1e-8):
 	   https://arxiv.org/pdf/1705.08086.pdf
 	'''
 	# Remove batch dim and reorder to CxHxW
+	Cc = content.shape[3]
+	Cs = style.shape[3]
+
 	content_t = tf.transpose(tf.squeeze(content), (2, 0, 1))
 	style_t = tf.transpose(tf.squeeze(style), (2, 0, 1))
 
