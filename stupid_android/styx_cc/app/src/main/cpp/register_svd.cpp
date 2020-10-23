@@ -256,7 +256,7 @@ namespace {
 }  // namespace
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_stupid_customops_MainActivity_initSvd(JNIEnv *env, jobject thiz, jstring modelPath) {
+Java_com_stupid_styx_1cc_MainActivity_initSvd(JNIEnv *env, jobject thiz, jstring modelPath) {
     std::string output = tflite::ops::custom::PrepareInterpreter(jstring2string(env, modelPath));
     return env->NewStringUTF(output.c_str());
 }
@@ -299,7 +299,7 @@ GetFloatVecField(JNIEnv *env, const jobject &input, const std::string &field_nam
 }
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_stupid_customops_MainActivity_runSvd(JNIEnv *env, jobject thiz, jobject input, jobject s,
+Java_com_stupid_styx_1cc_MainActivity_runSvd(JNIEnv *env, jobject thiz, jobject input, jobject s,
                                               jobject u) {
     const std::vector<float> input_vec = GetFloatVecField(env, input, "data");
     const std::vector<int> input_shape_vec = GetIntVecField(env, input, "shape");

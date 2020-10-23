@@ -1,14 +1,16 @@
-package com.stupid.customops;
+package com.stupid.styx_cc;
 
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.widget.TextView;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.FilenameFilter;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -27,21 +29,12 @@ public class MainActivity extends AppCompatActivity {
 
     // Read SVD model from assets and write it to a temp file because C++ cannot access the assets.
     File getSvdModelFile() {
-        try {
-            InputStream is = getAssets().open("svd.tflite");
-            int size = is.available();
-            byte[] buffer = new byte[size];
-            is.read(buffer);
-            is.close();
-            File outputDir = getApplicationContext().getCacheDir();
-            File outputFile = File.createTempFile("svd", "tflite", outputDir);
-            FileOutputStream stream = new FileOutputStream(outputFile);
-            stream.write(buffer);
-            stream.close();
-            return outputFile;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        File downloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+        File model_file = new File(downloads, "svd.tflite");
+        if (!model_file.exists()) {
+            throw new RuntimeException("No such file: " + model_file.getAbsolutePath());
         }
+        return model_file;
     }
 
     @Override
