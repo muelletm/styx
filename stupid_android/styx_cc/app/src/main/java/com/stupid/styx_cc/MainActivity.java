@@ -1,5 +1,7 @@
 package com.stupid.styx_cc;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
@@ -13,6 +15,10 @@ import java.util.Collections;
 import java.util.Comparator;
 
 public class MainActivity extends AppCompatActivity {
+
+    final static int PermRequestCode = 1;
+
+    TextView tv_;
 
     class Tensor {
         int[] shape;
@@ -29,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
 
     // Read SVD model from assets and write it to a temp file because C++ cannot access the assets.
     File getSvdModelFile() {
+
         File downloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
         File model_file = new File(downloads, "svd.tflite");
         if (!model_file.exists()) {
@@ -38,8 +45,26 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public void onRequestPermissionsResult(int requestCode,
+                                    String[] permissions,
+                                    int[] grantResults) {
+        assert requestCode == PermRequestCode;
+        assert permissions.length == 1;
+        assert grantResults.length == 1;
+        assert permissions[0].equals(Manifest.permission.READ_EXTERNAL_STORAGE);
+        if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            runModel();
+        } else {
+            tv_.setText("Permission denied.");
+        }
+    }
+
+    void runModel() {
+        if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PermRequestCode);
+            return;
+        }
+
         File modelPath = getSvdModelFile();
         String init_message = initSvd(modelPath.getAbsolutePath());
 
@@ -60,9 +85,16 @@ public class MainActivity extends AppCompatActivity {
             message = "Init failed: " + init_message;
         }
 
-        TextView tv = new TextView(this);
-        tv.setText(message);
-        setContentView(tv);
+        tv_.setText(message);
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        tv_ = new TextView(this);
+        tv_.setText("Waiting for permissions");
+        setContentView(tv_);
+        runModel();
     }
 
     public native String initSvd(String model_path);
