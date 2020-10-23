@@ -25,10 +25,10 @@ static tflite::FlatBufferModel *model_ = nullptr;
 static tflite::Interpreter *interpreter_ = nullptr;
 
 namespace {
-    double currentTimeMillis(void) {
+    long currentTimeMillis(void) {
         struct timespec res;
         clock_gettime(CLOCK_REALTIME, &res);
-        return 1000.0 * res.tv_sec + (double) res.tv_nsec / 1e6;
+        return (long)(1.0e3 * res.tv_sec + (double) res.tv_nsec / 1.0e6);
     }
 }
 
@@ -107,7 +107,7 @@ namespace tflite {
 
             TfLiteStatus SvdEval(TfLiteContext *context, TfLiteNode *node) {
                 LOGI("SvdEval");
-                double start_time =  currentTimeMillis();
+                long start_time =  currentTimeMillis();
                 using namespace tflite;
                 const TfLiteTensor *input = GetInput(context, node, 0);
                 TfLiteTensor *s = GetOutput(context, node, 0);
@@ -156,7 +156,7 @@ namespace tflite {
                     }
                 }
 
-                LOGI("SvdEval (took %fms)", currentTimeMillis() - start_time);
+                LOGI("SvdEval (took %ldms)", currentTimeMillis() - start_time);
                 return kTfLiteOk;
             }
 
@@ -188,7 +188,7 @@ namespace tflite {
 
         void populateOutput(JNIEnv *env, int index, jobject output) {
             LOGI("populateOutput");
-            double start_time =  currentTimeMillis();
+            long start_time =  currentTimeMillis();
             TfLiteTensor *tensor = interpreter_->output_tensor(index);
             float *data = interpreter_->typed_output_tensor<float>(index);
 
@@ -206,7 +206,7 @@ namespace tflite {
 
             jfieldID shapeID = env->GetFieldID(tensor_class, "shape", "[I");
             env->SetObjectField(output, shapeID, shape_array);
-            LOGI("populateOutput (took %fms)", currentTimeMillis() - start_time);
+            LOGI("populateOutput (took %ldms)", currentTimeMillis() - start_time);
         }
 
         std::string
@@ -216,7 +216,7 @@ namespace tflite {
                     const std::vector<float> &style,
                     const std::vector<int> &style_shape,
                     jobject result) {
-            double start_time =  currentTimeMillis();
+            long start_time =  currentTimeMillis();
             LOGI("runTransfer");
 
             if (interpreter_ == nullptr) {
@@ -245,11 +245,11 @@ namespace tflite {
             }
 
             {
-                double start_time =  currentTimeMillis();
+                long start_time =  currentTimeMillis();
                 if (interpreter_->Invoke() != kTfLiteOk) {
                     return "ERROR: Cannot invoke";
                 }
-                LOGI("Invoke (took %fms)", currentTimeMillis() - start_time);
+                LOGI("Invoke (took %ldms)", currentTimeMillis() - start_time);
             }
 
             // The graph should only use the s and u tensors.
@@ -260,7 +260,7 @@ namespace tflite {
             }
 
             populateOutput(env, 0, result);
-            LOGI("Run Transfer (took %fms)", currentTimeMillis() - start_time);
+            LOGI("Run Transfer (took %ldms)", currentTimeMillis() - start_time);
             return "";
         }
     }
@@ -345,12 +345,12 @@ Java_com_stupid_styx_1cc_MainActivity_runStyleTransfer(JNIEnv *env,
                                                        jobject style,
                                                        jobject result) {
     LOGI("runStyleTransfer");
-    double start_time =  currentTimeMillis();
+    long start_time =  currentTimeMillis();
     const std::vector<float> content_data = getFloatVecField(env, content, "data");
     const std::vector<int> content_shape = getIntVecField(env, content, "shape");
     const std::vector<float> style_data = getFloatVecField(env, style, "data");
     const std::vector<int> style_shape = getIntVecField(env, style, "shape");
-    LOGI("Prepared inputs (took %fms)", currentTimeMillis() - start_time);
+    LOGI("Prepared inputs (took %ldms)", currentTimeMillis() - start_time);
     const std::string output = tflite::runTransfer(
             env, content_data, content_shape, style_data, style_shape, result);
     return env->NewStringUTF(output.c_str());

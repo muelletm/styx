@@ -23,33 +23,14 @@ public class MainActivity extends AppCompatActivity {
     // fake.tflite, fake_svd.tflite, stupid_relu4.tflite
     private final static String MODEL_NAME_ = "stupid_relu4.tflite";
 
+    static {
+        System.loadLibrary("register-svd");
+    }
+
+    private ModelState model_state_ = ModelState.UNINITIALIZED;
+
     private TextView tv_;
     private ImageView image_;
-
-    private class Timer {
-        public Timer() {
-            time_ = System.currentTimeMillis();
-        }
-
-        public long getTimeDelta() {
-            return System.currentTimeMillis() - time_;
-        }
-
-        private long time_;
-    }
-
-    private class Tensor {
-        int[] shape;
-        float[] data;
-
-        @Override
-        public String toString() {
-            String output = "";
-            output += "shape: " + Arrays.toString(shape);
-            output += " data: " + Arrays.toString(data);
-            return output;
-        }
-    }
 
     private File getModelFile() {
         File downloads = Environment.getExternalStoragePublicDirectory(
@@ -59,6 +40,29 @@ public class MainActivity extends AppCompatActivity {
             throw new RuntimeException("No such file: " + model_file.getAbsolutePath());
         }
         return model_file;
+    }
+
+    private void InitModel() {
+        if (model_state_ != ModelState.UNINITIALIZED) {
+            // The model has already been initialized.
+            return;
+        }
+        if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            tv_.setText("Storage permission denied.");
+            return;
+        }
+        try {
+            File modelPath = getModelFile();
+            String init_message = prepareInterpreter(modelPath.getAbsolutePath());
+            if (!init_message.isEmpty()) {
+                tv_.setText("Init failed: " + init_message);
+                return;
+            }
+        } catch (RuntimeException e) {
+            tv_.setText(e.getMessage());
+            return;
+        }
+        model_state_ = ModelState.IDLE;
     }
 
     private Tensor LoadResourceImageAsTensor(int resource_index) {
@@ -158,16 +162,6 @@ public class MainActivity extends AppCompatActivity {
             return "Permission denied.";
         }
 
-        try {
-            File modelPath = getModelFile();
-            String init_message = prepareInterpreter(modelPath.getAbsolutePath());
-            if (!init_message.isEmpty()) {
-                return "Init failed: " + init_message;
-            }
-        } catch (RuntimeException e) {
-            return e.getMessage();
-        }
-
         Tensor content = LoadResourceImageAsTensor(R.drawable.gilbert);
         Tensor style = LoadResourceImageAsTensor(R.drawable.style5);
         Tensor result = new Tensor();
@@ -192,12 +186,24 @@ public class MainActivity extends AppCompatActivity {
         image_.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String error = runModel();
-                if (!error.isEmpty()) {
-                    tv_.setText(error);
-                    image_.setImageBitmap(
-                            TensorToBitmap(LoadResourceImageAsTensor(R.drawable.gilbert), true));
+                if (model_state_ == ModelState.UNINITIALIZED) {
+                    InitModel();
                 }
+                if (model_state_ != ModelState.IDLE) {
+                    return;
+                }
+                model_state_ = ModelState.RUNNING;
+                new Thread(new Runnable() {
+                    public void run() {
+                        String error = runModel();
+                        if (!error.isEmpty()) {
+                            tv_.setText(error);
+                            image_.setImageBitmap(
+                                    TensorToBitmap(LoadResourceImageAsTensor(R.drawable.gilbert), true));
+                        }
+                        model_state_ = ModelState.IDLE;
+                    }
+                }).start();
             }
         });
 
@@ -211,7 +217,34 @@ public class MainActivity extends AppCompatActivity {
 
     private native String runStyleTransfer(Tensor content, Tensor style, Tensor result);
 
-    static {
-        System.loadLibrary("register-svd");
+    enum ModelState {
+        UNINITIALIZED,
+        RUNNING,
+        IDLE,
+    }
+
+    private class Timer {
+        private final long time_;
+
+        public Timer() {
+            time_ = System.currentTimeMillis();
+        }
+
+        public long getTimeDelta() {
+            return System.currentTimeMillis() - time_;
+        }
+    }
+
+    private class Tensor {
+        int[] shape;
+        float[] data;
+
+        @Override
+        public String toString() {
+            String output = "";
+            output += "shape: " + Arrays.toString(shape);
+            output += " data: " + Arrays.toString(data);
+            return output;
+        }
     }
 }
