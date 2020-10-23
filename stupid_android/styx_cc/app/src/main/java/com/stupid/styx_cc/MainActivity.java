@@ -88,8 +88,8 @@ public class MainActivity extends AppCompatActivity {
             setStatus(e.getMessage());
             return;
         }
-        model_state_ = ModelState.IDLE;
-        setStatus("Idle.");
+        setModelState(ModelState.IDLE);
+        setStatus("Waiting...");
     }
 
     private Tensor LoadResourceImageAsTensor(int resource_index) {
@@ -224,7 +224,7 @@ public class MainActivity extends AppCompatActivity {
                     setStatus(error);
                     setImage(TensorToBitmap(LoadResourceImageAsTensor(R.drawable.gilbert), true));
                 }
-                model_state_ = ModelState.IDLE;
+                setModelState(ModelState.IDLE);
             }
         }).start();
     }
@@ -333,7 +333,7 @@ public class MainActivity extends AppCompatActivity {
                 if (model_state_ != ModelState.IDLE) {
                     return;
                 }
-                model_state_ = ModelState.RUNNING;
+                setModelState(ModelState.RUNNING);
                 setStatus("Running ...");
                 startModelThread();
                 startProgressThread();
@@ -356,6 +356,24 @@ public class MainActivity extends AppCompatActivity {
         UNINITIALIZED,
         RUNNING,
         IDLE,
+    }
+
+    private void setStyleBarEnabled(final boolean enabled) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                stylebar_.setEnabled(enabled);
+            }
+        });
+    }
+
+    private void setModelState(ModelState state) {
+        if (state == ModelState.RUNNING) {
+            setStyleBarEnabled(false);
+        } else {
+            setStyleBarEnabled(true);
+        }
+        model_state_ = state;
     }
 
     private class Timer {
