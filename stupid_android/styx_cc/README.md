@@ -3,6 +3,18 @@ Custom Ops
 
 Based on https://developer.android.com/studio/projects/add-native-code.
 
+## Install instructions
+
+
+* Import the project into Android Studio
+* Clone flatbuffers and tflite set the paths in *CMakeLists.txt*
+* Download a content and style images
+  * (into ´./stupid_android/styx_cc/app/src/main/res/drawable´)
+  * Update the definition of ´STYLES´ in ´MainActivity.java´
+* Build the APK and install it on your phone
+* Download the style transfer tflite model
+ * [stupid_relu4.tflite](https://drive.google.com/drive/u/0/folders/1GWfb4EcM7-WFKCCM7ZHlimE_J6bS4ExW)
+* Launch the app and give it permission to read storage files
 
 
 Licensed to the Apache Software Foundation (ASF) under one or more contributor
@@ -20,4 +32,3 @@ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
 License for the specific language governing permissions and limitations under
 the License.
 
- 
