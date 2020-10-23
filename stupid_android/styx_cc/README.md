@@ -8,12 +8,14 @@ Based on https://developer.android.com/studio/projects/add-native-code.
 
 * Import the project into Android Studio
 * Clone flatbuffers and tflite set the paths in 'CMakeLists.txt'
+  * `git clone https://github.com/google/flatbuffers.git flatbuffers`
+  * `git clone https://github.com/tensorflow/tensorflow.git tensorflow`
 * Download a content and style images
-  * (into 'stupid_android/styx_cc/app/src/main/res/drawable')
-  * Update the definition of 'STYLES' in 'MainActivity.java'
+  * (into `stupid_android/styx_cc/app/src/main/res/drawable`)
+  * Update the definition of `STYLES` in `MainActivity.java`
 * Build the APK and install it on your phone
 * Download the style transfer tflite model
- * [stupid_relu4.tflite](https://drive.google.com/drive/u/0/folders/1GWfb4EcM7-WFKCCM7ZHlimE_J6bS4ExW)
+  * [stupid_relu4.tflite](https://drive.google.com/drive/u/0/folders/1GWfb4EcM7-WFKCCM7ZHlimE_J6bS4ExW)
 * Launch the app and give it permission to read storage files
 
 
