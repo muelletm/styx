@@ -55,6 +55,9 @@ namespace tflite {
                 if (!get2dShape(*input, &input_shape)) {
                     return kTfLiteError;
                 }
+
+
+
                 int num_rows = input_shape[0];
                 int num_cols = input_shape[1];
                 if (num_rows != num_cols) {
@@ -122,8 +125,8 @@ namespace tflite {
                     input_eigen(row, col) = input_data[index];
                 }
 
-                Eigen::BDCSVD <Eigen::MatrixXf> svd(input_eigen,
-                                                    Eigen::ComputeFullU | Eigen::ComputeFullV);
+                Eigen::BDCSVD<Eigen::MatrixXf> svd(input_eigen,
+                                                   Eigen::ComputeFullU | Eigen::ComputeFullV);
 
                 const Eigen::VectorXf &s_eigen = svd.singularValues();
                 for (int i = 0; i < num_rows; i++) {
@@ -192,21 +195,44 @@ namespace tflite {
             }
 
             std::string
-            runSvD(JNIEnv *env, const std::vector<float> &input,
-                   const std::vector<int> &input_shape, jobject s,
-                   jobject u) {
+            runTransfer(JNIEnv *env,
+                   const std::vector<float> &content,
+                   const std::vector<int> &content_shape,
+                   const std::vector<float> &style,
+                   const std::vector<int> &style_shape,
+                   jobject result) {
                 if (interpreter_ == nullptr) {
                     return "ERROR: Interpreter is null.";
                 }
-                interpreter_->ResizeInputTensor(0, input_shape);
+
+                if (interpreter_->inputs().size() != 2) {
+                    return "ERROR: Unexpected number of inputs.";
+                }
+
+                auto c_dims = interpreter_->input_tensor(0)->dims;
+                for (int i=0; i<c_dims->size; ++i) {
+                    LOGI("c_dim[%d]: %d", i, c_dims->data[i]);
+                }
+                auto s_dims = interpreter_->input_tensor(1)->dims;
+                for (int i=0; i<s_dims->size; ++i) {
+                    LOGI("s_dim[%d]: %d", i, s_dims->data[i]);
+                }
+
+                interpreter_->ResizeInputTensor(0, content_shape);
+                interpreter_->ResizeInputTensor(1, style_shape);
 
                 if (interpreter_->AllocateTensors() != kTfLiteOk) {
                     return "ERROR: Cannot allocate tensors";
                 }
 
-                float *input_data = interpreter_->typed_input_tensor<float>(0);
+                float* content_data = interpreter_->typed_input_tensor<float>(0);
                 for (int i = 0; i < 9; i++) {
-                    input_data[i] = input[i];
+                    content_data[i] = content[i];
+                }
+
+                float* style_data = interpreter_->typed_input_tensor<float>(1);
+                for (int i = 0; i < 9; i++) {
+                    style_data[i] = style[i];
                 }
 
                 if (interpreter_->Invoke() != kTfLiteOk) {
@@ -214,14 +240,13 @@ namespace tflite {
                 }
 
                 // The graph should only use the s and u tensors.
-                if (interpreter_->outputs().size() != 2) {
+                if (interpreter_->outputs().size() != 1) {
                     LOGE("ERROR: Unexpected number of outputs: %d", interpreter_->outputs().size());
                     return "ERROR: Unexpected number of outputs: " +
                            std::to_string(interpreter_->outputs().size());
                 }
 
-                populateOutput(env, 0, s);
-                populateOutput(env, 1, u);
+                populateOutput(env, 0, result);
                 return "";
             }
 
@@ -299,10 +324,16 @@ GetFloatVecField(JNIEnv *env, const jobject &input, const std::string &field_nam
 }
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_stupid_styx_1cc_MainActivity_runSvd(JNIEnv *env, jobject thiz, jobject input, jobject s,
-                                              jobject u) {
-    const std::vector<float> input_vec = GetFloatVecField(env, input, "data");
-    const std::vector<int> input_shape_vec = GetIntVecField(env, input, "shape");
-    std::string output = tflite::ops::custom::runSvD(env, input_vec, input_shape_vec, s, u);
+Java_com_stupid_styx_1cc_MainActivity_runStyleTransfer(JNIEnv *env,
+        jobject thiz,
+        jobject content,
+        jobject style,
+        jobject result) {
+    const std::vector<float> content_data = GetFloatVecField(env, content, "data");
+    const std::vector<int> content_shape = GetIntVecField(env, content, "shape");
+    const std::vector<float> style_data = GetFloatVecField(env, style, "data");
+    const std::vector<int> style_shape = GetIntVecField(env, style, "shape");
+    const std::string output = tflite::ops::custom::runTransfer(
+            env, content_data, content_shape, style_data, style_shape, result);
     return env->NewStringUTF(output.c_str());
 }
