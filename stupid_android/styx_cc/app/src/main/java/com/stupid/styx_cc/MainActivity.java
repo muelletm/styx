@@ -18,12 +18,26 @@ import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity {
 
-    final static int PermRequestCode = 1;
+    private final static int PERM_REQUEST_CODE_ = 1;
+    private final static int MAX_IMAGE_SIZE_ = 512;
+    private final static String MODEL_NAME_ = "fake_svd.tflite";
 
-    TextView tv_;
-    ImageView image_;
+    private TextView tv_;
+    private ImageView image_;
 
-    class Tensor {
+    private class Timer {
+        public Timer() {
+            time_ = System.currentTimeMillis();
+        }
+
+        public long getTimeDelta() {
+            return System.currentTimeMillis() - time_;
+        }
+
+        private long time_;
+    }
+
+    private class Tensor {
         int[] shape;
         float[] data;
 
@@ -36,26 +50,23 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // Read SVD model from assets and write it to a temp file because C++ cannot access the assets.
-    File getSvdModelFile() {
-
-        File downloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-        File model_file = new File(downloads, "fake.tflite");
+    private File getModelFile() {
+        File downloads = Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_DOWNLOADS);
+        File model_file = new File(downloads, MODEL_NAME_);
         if (!model_file.exists()) {
             throw new RuntimeException("No such file: " + model_file.getAbsolutePath());
         }
         return model_file;
     }
 
-    Tensor LoadResourceImageAsTensor(int resource_index) {
-        Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.gilbert);
+    private Tensor LoadResourceImageAsTensor(int resource_index) {
+        Timer timer = new Timer();
+        Bitmap bitmap = BitmapFactory.decodeResource(getResources(), resource_index);
 
         // TODO(thomas) Remove this temporary hack.
-        int new_size = Math.max(bitmap.getWidth(), bitmap.getHeight());
-        if (new_size > 64) {
-            new_size = 64;
-        }
-        bitmap = Bitmap.createScaledBitmap(bitmap, new_size,new_size, false);
+        int new_size = Math.min(Math.min(bitmap.getWidth(), bitmap.getHeight()), MAX_IMAGE_SIZE_);
+        bitmap = Bitmap.createScaledBitmap(bitmap, new_size, new_size, false);
 
         int size = bitmap.getHeight() * bitmap.getWidth() * 3;
         Tensor tensor = new Tensor();
@@ -70,13 +81,6 @@ public class MainActivity extends AppCompatActivity {
                 int green = (pixel >> 8) & 0xFF;
                 int blue = pixel & 0xFF;
 
-                if (y == 0 && x == 0) {
-                    Log.i("pixel", Integer.toBinaryString(pixel));
-                    Log.i("pixel", Integer.toBinaryString(red));
-                    Log.i("pixel", Integer.toBinaryString(green));
-                    Log.i("pixel", Integer.toBinaryString(blue));
-                }
-
                 assert red >= 0 && red <= 255;
                 assert green >= 0 && green <= 255;
                 assert blue >= 0 && blue <= 255;
@@ -89,10 +93,12 @@ public class MainActivity extends AppCompatActivity {
                 index++;
             }
         }
+        Log.i("LoadResourceImage", "Took " + timer.getTimeDelta() + "ms");
         return tensor;
     }
 
-    Bitmap TensorToBitmap(Tensor tensor, boolean red_eye) {
+    private Bitmap TensorToBitmap(Tensor tensor, boolean red_eye) {
+        Timer timer = new Timer();
         int height = tensor.shape[1];
         int width = tensor.shape[2];
 
@@ -122,13 +128,11 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        int current_size = Math.max(image.getWidth(), image.getHeight());
-        if (current_size < 512) {
-            float scale_factor = 512 / current_size;
-            int new_width = (int)(scale_factor * image.getWidth());
-            int new_height = (int)(scale_factor * image.getHeight());
-            image = Bitmap.createScaledBitmap(image, new_width, new_height, true);
-        }
+
+        int new_height = image_.getDrawable().getIntrinsicHeight();
+        int new_width = image_.getDrawable().getIntrinsicWidth();
+        image = Bitmap.createScaledBitmap(image, new_width, new_height, true);
+        Log.i("LoadResourceImage", "Took " + timer.getTimeDelta() + "ms");
         return image;
     }
 
@@ -136,7 +140,7 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode,
                                            String[] permissions,
                                            int[] grantResults) {
-        assert requestCode == PermRequestCode;
+        assert requestCode == PERM_REQUEST_CODE_;
         assert permissions.length == 1;
         assert grantResults.length == 1;
         assert permissions[0].equals(Manifest.permission.READ_EXTERNAL_STORAGE);
@@ -147,16 +151,20 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    void runModel() {
+    private String runModel() {
+        Timer timer = new Timer();
         if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            tv_.setText("Permission denied.");
-            return;
+            return "Permission denied.";
         }
-        File modelPath = getSvdModelFile();
-        String init_message = initSvd(modelPath.getAbsolutePath());
-        if (!init_message.isEmpty()) {
-            tv_.setText("Init failed: " + init_message);
-            return;
+
+        try {
+            File modelPath = getModelFile();
+            String init_message = prepareInterpreter(modelPath.getAbsolutePath());
+            if (!init_message.isEmpty()) {
+                return "Init failed: " + init_message;
+            }
+        } catch (RuntimeException e) {
+            return e.getMessage();
         }
 
         Tensor content = LoadResourceImageAsTensor(R.drawable.gilbert);
@@ -164,11 +172,11 @@ public class MainActivity extends AppCompatActivity {
         Tensor result = new Tensor();
         String error = runStyleTransfer(content, style, result);
         if (!error.isEmpty()) {
-            tv_.setText("Transfer failed: " + error);
-            return;
+            return "Transfer failed: " + error;
         }
         image_.setImageBitmap(TensorToBitmap(result, false));
-        tv_.setText("Success");
+        tv_.setText("Success (" + (timer.getTimeDelta()) + " milliseconds)");
+        return "";
     }
 
     @Override
@@ -183,28 +191,26 @@ public class MainActivity extends AppCompatActivity {
         image_.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                image_.setImageBitmap(
-                        TensorToBitmap(LoadResourceImageAsTensor(R.drawable.gilbert), true));
-                runModel();
+                String error = runModel();
+                if (!error.isEmpty()) {
+                    tv_.setText(error);
+                    image_.setImageBitmap(
+                            TensorToBitmap(LoadResourceImageAsTensor(R.drawable.gilbert), true));
+                }
             }
         });
 
-        image_.setImageBitmap(
-                TensorToBitmap(LoadResourceImageAsTensor(R.drawable.gilbert), false));
-
         if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PermRequestCode);
+            requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERM_REQUEST_CODE_);
             tv_.setText("Waiting for permissions");
         }
     }
 
-    public native String initSvd(String model_path);
+    private native String prepareInterpreter(String model_path);
 
-    public native String runStyleTransfer(Tensor content, Tensor style, Tensor result);
+    private native String runStyleTransfer(Tensor content, Tensor style, Tensor result);
 
     static {
         System.loadLibrary("register-svd");
     }
-
-
 }
