@@ -20,7 +20,7 @@ public class MainActivity extends AppCompatActivity {
 
     private final static int PERM_REQUEST_CODE_ = 1;
     private final static int MAX_IMAGE_SIZE_ = 512;
-    // fake.tflite, fake_svd.tflite, stupid_relu4.tflite
+    private final static int MIN_IMAGE_SIZE_ = 512;
     private final static String MODEL_NAME_ = "stupid_relu4.tflite";
 
     static {
@@ -63,14 +63,15 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         model_state_ = ModelState.IDLE;
+        tv_.setText("Idle.");
     }
 
     private Tensor LoadResourceImageAsTensor(int resource_index) {
         Timer timer = new Timer();
         Bitmap bitmap = BitmapFactory.decodeResource(getResources(), resource_index);
 
-        // TODO(thomas) Remove this temporary hack.
-        int new_size = Math.min(Math.min(bitmap.getWidth(), bitmap.getHeight()), MAX_IMAGE_SIZE_);
+        int max_size = Math.max(bitmap.getWidth(), bitmap.getHeight());
+        int new_size = Math.max(Math.min(max_size, MAX_IMAGE_SIZE_), MIN_IMAGE_SIZE_);
         bitmap = Bitmap.createScaledBitmap(bitmap, new_size, new_size, false);
 
         int size = bitmap.getHeight() * bitmap.getWidth() * 3;
@@ -102,6 +103,17 @@ public class MainActivity extends AppCompatActivity {
         return tensor;
     }
 
+    private int toColorValue(float value) {
+        int int_value = (int)(value * 255.f);
+        if (int_value < 0 ) {
+            return 0;
+        }
+        if (int_value > 255) {
+            return 255;
+        }
+        return int_value;
+    }
+
     private Bitmap TensorToBitmap(Tensor tensor, boolean red_eye) {
         Timer timer = new Timer();
         int height = tensor.shape[1];
@@ -113,17 +125,17 @@ public class MainActivity extends AppCompatActivity {
         int index = 0;
         for (int x = 0; x < width; ++x) {
             for (int y = 0; y < height; ++y) {
-                int red = (int) (tensor.data[index] * 255.);
+                int red = toColorValue(tensor.data[index]);
                 index++;
-                int green = (int) (tensor.data[index] * 255.);
+                int green = toColorValue(tensor.data[index]);
                 index++;
-                int blue = (int) (tensor.data[index] * 255.);
+                int blue = toColorValue(tensor.data[index]);
+                index++;
+
                 if (red_eye) {
                     green = 0;
                     blue = 0;
                 }
-
-                index++;
                 int color = Color.rgb(
                         red,
                         green,
@@ -193,6 +205,7 @@ public class MainActivity extends AppCompatActivity {
                     return;
                 }
                 model_state_ = ModelState.RUNNING;
+                tv_.setText("Running ...");
                 new Thread(new Runnable() {
                     public void run() {
                         String error = runModel();
