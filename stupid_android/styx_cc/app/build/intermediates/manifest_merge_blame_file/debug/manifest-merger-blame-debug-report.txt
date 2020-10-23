@@ -1,0 +1,49 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.stupid.customnops"
+4    android:versionCode="1"
+5    android:versionName="1.0" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="19"
+8-->/home/thomas/PycharmProjects/stupid/stupid_android/custom_ops/app/src/main/AndroidManifest.xml
+9        android:targetSdkVersion="28" />
+9-->/home/thomas/PycharmProjects/stupid/stupid_android/custom_ops/app/src/main/AndroidManifest.xml
+10
+11    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+12    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+13    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+14
+15    <application
+15-->/home/thomas/PycharmProjects/stupid/stupid_android/custom_ops/app/src/main/AndroidManifest.xml:5:5-18:19
+16        android:allowBackup="true"
+16-->/home/thomas/PycharmProjects/stupid/stupid_android/custom_ops/app/src/main/AndroidManifest.xml:6:9-35
+17        android:appComponentFactory="android.support.v4.app.CoreComponentFactory"
+17-->[com.android.support:support-compat:28.0.0] /home/thomas/.gradle/caches/transforms-2/files-2.1/f8a397328201698168ace7f239d1330f/support-compat-28.0.0/AndroidManifest.xml:22:18-91
+18        android:debuggable="true"
+19        android:icon="@mipmap/ic_launcher"
+19-->/home/thomas/PycharmProjects/stupid/stupid_android/custom_ops/app/src/main/AndroidManifest.xml:7:9-43
+20        android:label="@string/app_name"
+20-->/home/thomas/PycharmProjects/stupid/stupid_android/custom_ops/app/src/main/AndroidManifest.xml:8:9-41
+21        android:supportsRtl="true"
+21-->/home/thomas/PycharmProjects/stupid/stupid_android/custom_ops/app/src/main/AndroidManifest.xml:9:9-35
+22        android:testOnly="true"
+23        android:theme="@style/AppTheme" >
+23-->/home/thomas/PycharmProjects/stupid/stupid_android/custom_ops/app/src/main/AndroidManifest.xml:10:9-40
+24        <activity android:name="com.stupid.customops.MainActivity" >
+24-->/home/thomas/PycharmProjects/stupid/stupid_android/custom_ops/app/src/main/AndroidManifest.xml:11:9-17:20
+24-->/home/thomas/PycharmProjects/stupid/stupid_android/custom_ops/app/src/main/AndroidManifest.xml:11:19-47
+25            <intent-filter>
+25-->/home/thomas/PycharmProjects/stupid/stupid_android/custom_ops/app/src/main/AndroidManifest.xml:12:13-16:29
+26                <action android:name="android.intent.action.MAIN" />
+26-->/home/thomas/PycharmProjects/stupid/stupid_android/custom_ops/app/src/main/AndroidManifest.xml:13:17-69
+26-->/home/thomas/PycharmProjects/stupid/stupid_android/custom_ops/app/src/main/AndroidManifest.xml:13:25-66
+27
+28                <category android:name="android.intent.category.LAUNCHER" />
+28-->/home/thomas/PycharmProjects/stupid/stupid_android/custom_ops/app/src/main/AndroidManifest.xml:15:17-77
+28-->/home/thomas/PycharmProjects/stupid/stupid_android/custom_ops/app/src/main/AndroidManifest.xml:15:27-74
+29            </intent-filter>
+30        </activity>
+31    </application>
+32
+33</manifest>

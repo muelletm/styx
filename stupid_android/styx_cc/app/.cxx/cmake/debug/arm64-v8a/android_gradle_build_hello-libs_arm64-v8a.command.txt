@@ -1,0 +1,7 @@
+Executable : /home/thomas/Android/Sdk/cmake/3.10.2.4988404/bin/ninja
+arguments : 
+-C
+/home/thomas/PycharmProjects/stupid/stupid_android/custom_ops/app/.cxx/cmake/debug/arm64-v8a
+hello-libs
+jvmArgs : 
+

@@ -1,0 +1,5 @@
+com/stupid/customops/BuildConfig.java
+ com.stupid.customops.BuildConfig
+com/stupid/customops/MainActivity.java
+ com.stupid.customops.MainActivity
+ com.stupid.customops.MainActivity$Tensor

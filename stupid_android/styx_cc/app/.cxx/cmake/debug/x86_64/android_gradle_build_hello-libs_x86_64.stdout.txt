@@ -1,0 +1,2 @@
+ninja: Entering directory `/home/thomas/PycharmProjects/stupid/stupid_android/custom_ops/app/.cxx/cmake/debug/x86_64'
+ninja: no work to do.

@@ -1,0 +1,3 @@
+ninja: Entering directory `/home/thomas/PycharmProjects/stupid/stupid_android/custom_ops/app/.cxx/cmake/debug/x86'
+[1/2] Building CXX object CMakeFiles/register-svd.dir/register_svd.cpp.o
+[2/2] Linking CXX shared library /home/thomas/PycharmProjects/stupid/stupid_android/custom_ops/app/build/intermediates/cmake/debug/obj/x86/libregister-svd.so

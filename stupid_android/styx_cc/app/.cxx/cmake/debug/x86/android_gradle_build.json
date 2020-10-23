@@ -1,0 +1,45 @@
+{
+  "stringTable": {
+    "0": "/home/thomas/PycharmProjects/stupid/stupid_android/custom_ops/app/.cxx/cmake/debug/x86",
+    "1": "--target=i686-none-linux-android19 --gcc-toolchain=/home/thomas/Android/Sdk/ndk/21.2.6472646/toolchains/llvm/prebuilt/linux-x86_64 --sysroot=/home/thomas/Android/Sdk/ndk/21.2.6472646/toolchains/llvm/prebuilt/linux-x86_64/sysroot -Dregister_svd_EXPORTS -I/home/thomas/projects/flatbuffers/include -I/home/thomas/projects/tensorflow -I/home/thomas/projects/eigen-3.3.8 -I/home/thomas/PycharmProjects/stupid/stupid_android/custom_ops/app/src/main/cpp/../../../../distribution/gmath/include -I/home/thomas/PycharmProjects/stupid/stupid_android/custom_ops/app/src/main/cpp/../../../../distribution/gperf/include -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -mstackrealign -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -std=gnu++11 -O0 -fno-limit-debug-info -fPIC"
+  },
+  "buildFiles": [
+    "/home/thomas/PycharmProjects/stupid/stupid_android/custom_ops/app/src/main/cpp/CMakeLists.txt",
+    "/home/thomas/Android/Sdk/ndk/21.2.6472646/build/cmake/android.toolchain.cmake",
+    "/home/thomas/Android/Sdk/ndk/21.2.6472646/build/cmake/platforms.cmake"
+  ],
+  "cleanCommands": [
+    "/home/thomas/Android/Sdk/cmake/3.10.2.4988404/bin/ninja -C \"/home/thomas/PycharmProjects/stupid/stupid_android/custom_ops/app/.cxx/cmake/debug/x86\" clean"
+  ],
+  "buildTargetsCommand": "/home/thomas/Android/Sdk/cmake/3.10.2.4988404/bin/ninja  -C \"/home/thomas/PycharmProjects/stupid/stupid_android/custom_ops/app/.cxx/cmake/debug/x86\" {LIST_OF_TARGETS_TO_BUILD}",
+  "libraries": {
+    "register-svd-Debug-x86": {
+      "buildCommand": "/home/thomas/Android/Sdk/cmake/3.10.2.4988404/bin/ninja -C \"/home/thomas/PycharmProjects/stupid/stupid_android/custom_ops/app/.cxx/cmake/debug/x86\" register-svd",
+      "buildType": "debug",
+      "toolchain": "3283489703",
+      "abi": "x86",
+      "artifactName": "register-svd",
+      "files": [
+        {
+          "src": "/home/thomas/PycharmProjects/stupid/stupid_android/custom_ops/app/src/main/cpp/register_svd.cpp",
+          "flagsOrdinal": 1,
+          "workingDirectoryOrdinal": 0
+        }
+      ],
+      "headers": [],
+      "output": "/home/thomas/PycharmProjects/stupid/stupid_android/custom_ops/app/build/intermediates/cmake/debug/obj/x86/libregister-svd.so",
+      "runtimeFiles": [
+        "/home/thomas/PycharmProjects/stupid/stupid_android/custom_ops/distribution/gperf/lib/x86/libgperf.so"
+      ]
+    }
+  },
+  "toolchains": {
+    "3283489703": {
+      "cppCompilerExecutable": "/home/thomas/Android/Sdk/ndk/21.2.6472646/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++"
+    }
+  },
+  "cFileExtensions": [],
+  "cppFileExtensions": [
+    "cpp"
+  ]
+}
