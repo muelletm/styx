@@ -22,7 +22,7 @@ public class MainActivity extends AppCompatActivity {
     private final static int PERM_REQUEST_CODE_ = 1;
     private final static int MAX_IMAGE_SIZE_ = 512;
     private final static int MIN_IMAGE_SIZE_ = 512;
-    private final static int SVD_RANK_ = -1;
+    private final static int SVD_RANK_ = 128;
     private final static String MODEL_NAME_ = "stupid_relu4.tflite";
     private final static int[] STYLES = new int[]{
             R.drawable.style1,
