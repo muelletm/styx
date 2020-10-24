@@ -25,11 +25,13 @@ set(TF_DIR                  ${HOME_DIR}/projects/tensorflow)
 set(FLATBUFFER_DIR          ${HOME_DIR}/projects/flatbuffers/include)
 set(EIGEN_DIR          ${HOME_DIR}/projects/eigen-3.3.8)
 set(TFLITE_LIB_DIR          ${CMAKE_CURRENT_SOURCE_DIR}/tflite/lib/${ANDROID_ABI})
+set(RSVD ${HOME_DIR}/projects/rsvd/include)
 
 include_directories(
 ${FLATBUFFER_DIR}
 ${TF_DIR}
 ${EIGEN_DIR}
+${RSVD}
 )
 
 link_directories(${TFLITE_LIB_DIR})

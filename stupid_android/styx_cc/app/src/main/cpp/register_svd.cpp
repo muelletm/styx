@@ -14,6 +14,7 @@
 #include "tensorflow/lite/kernels/register.h"
 #include "Eigen/SVD"
 #include "Eigen/Dense"
+#include "rsvd/RandomizedSvd.hpp"
 
 #define LOGI(...) \
   ((void)__android_log_print(ANDROID_LOG_INFO, "register_svd::", __VA_ARGS__))
@@ -23,6 +24,7 @@
 
 static tflite::FlatBufferModel *model_ = nullptr;
 static tflite::Interpreter *interpreter_ = nullptr;
+static int svd_rank_ = -1;
 
 namespace {
     long currentTimeMillis(void) {
@@ -105,6 +107,23 @@ namespace tflite {
                 return status;
             }
 
+            void CopyVector(const Eigen::VectorXf& vector, float* data) {
+                for (int i = 0; i < vector.size(); i++) {
+                    data[i] = (float) vector(i);
+                }
+            }
+
+            void CopyMatrix(const Eigen::MatrixXf& matrix,
+                            const std::vector<int>& input_shape,
+                            float* data) {
+                for (int r = 0; r < matrix.rows(); r++) {
+                    for (int c = 0; c < matrix.cols(); c++) {
+                        int index = r * input_shape[0] + c;
+                        data[index] = (float) matrix(r, c);
+                    }
+                }
+            }
+
             TfLiteStatus SvdEval(TfLiteContext *context, TfLiteNode *node) {
                 LOGI("SvdEval");
                 long start_time =  currentTimeMillis();
@@ -125,37 +144,36 @@ namespace tflite {
                 }
                 int num_rows = input_shape[0];
                 int num_cols = input_shape[1];
-
                 Eigen::MatrixXf input_eigen(num_rows, num_cols);
                 for (int index = 0; index < NumElements(input); ++index) {
                     int row = index / input_shape[0];
                     int col = index % input_shape[0];
                     input_eigen(row, col) = input_data[index];
                 }
-
-                Eigen::BDCSVD<Eigen::MatrixXf> svd(input_eigen,
-                                                   Eigen::ComputeFullU | Eigen::ComputeFullV);
-
-                const Eigen::VectorXf &s_eigen = svd.singularValues();
-                for (int i = 0; i < num_rows; i++) {
-                    s_data[i] = s_eigen(i);
+                if (svd_rank_ == -1 ) {
+                    Eigen::BDCSVD<Eigen::MatrixXf> svd(input_eigen,
+                                                      Eigen::ComputeFullU | Eigen::ComputeFullV);
+                    const Eigen::VectorXf &s_eigen = svd.singularValues();
+                    CopyVector(s_eigen, s_data);
+                    const Eigen::MatrixXf &u_eigen = svd.matrixU();
+                    CopyMatrix(u_eigen, input_shape, u_data);
+                    const Eigen::MatrixXf &v_eigen = svd.matrixV();
+                    CopyMatrix(v_eigen, input_shape, v_data);
+                } else {
+                    std::mt19937_64 randomEngine{};
+                    randomEngine.seed(777);
+                    Rsvd::RandomizedSvd<Eigen::MatrixXf, std::mt19937_64, Rsvd::SubspaceIterationConditioner::Lu> svd(randomEngine);
+                    svd.compute(input_eigen, svd_rank_);
+                    std::fill(s_data, s_data + NumElements(s), 0.0f);
+                    std::fill(u_data, u_data + NumElements(u), 0.0f);
+                    std::fill(v_data, v_data + NumElements(v), 0.0f);
+                    const Eigen::VectorXf s_eigen = svd.singularValues();
+                    CopyVector(s_eigen, s_data);
+                    const Eigen::MatrixXf u_eigen = svd.matrixU();
+                    CopyMatrix(u_eigen, input_shape, u_data);
+                    const Eigen::MatrixXf v_eigen = svd.matrixV();
+                    CopyMatrix(v_eigen, input_shape, v_data);
                 }
-
-                const Eigen::MatrixXf &u_eigen = svd.matrixU();
-                for (int r = 0; r < u_eigen.rows(); r++) {
-                    for (int c = 0; c < u_eigen.cols(); c++) {
-                        int index = r * input_shape[0] + c;
-                        u_data[index] = u_eigen(r, c);
-                    }
-                }
-                const Eigen::MatrixXf &v_eigen = svd.matrixV();
-                for (int r = 0; r < v_eigen.rows(); r++) {
-                    for (int c = 0; c < v_eigen.cols(); c++) {
-                        int index = r * input_shape[0] + c;
-                        v_data[index] = v_eigen(r, c);
-                    }
-                }
-
                 LOGI("SvdEval (took %ldms)", currentTimeMillis() - start_time);
                 return kTfLiteOk;
             }
@@ -341,10 +359,13 @@ Java_com_stupid_styx_1cc_MainActivity_prepareInterpreter(JNIEnv *env, jobject th
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_stupid_styx_1cc_MainActivity_runStyleTransfer(JNIEnv *env,
                                                        jobject thiz,
+                                                       jint svd_rank,
                                                        jobject content,
                                                        jobject style,
                                                        jobject result) {
+
     LOGI("runStyleTransfer");
+    svd_rank_ = (int)svd_rank;
     long start_time =  currentTimeMillis();
     const std::vector<float> content_data = getFloatVecField(env, content, "data");
     const std::vector<int> content_shape = getIntVecField(env, content, "shape");

@@ -1,4 +1,4 @@
-Custom Ops
+StyxCC
 =========
 
 Based on https://developer.android.com/studio/projects/add-native-code.
@@ -7,9 +7,11 @@ Based on https://developer.android.com/studio/projects/add-native-code.
 
 
 * Import the project into Android Studio
-* Clone flatbuffers and tflite set the paths in 'CMakeLists.txt'
-  * `git clone https://github.com/google/flatbuffers.git flatbuffers`
-  * `git clone https://github.com/tensorflow/tensorflow.git tensorflow`
+* Get the dependencies and set the paths in `CMakeLists.txt`
+  * `git clone https://github.com/tensorflow/tensorflow.git`
+  * `git clone https://github.com/google/flatbuffers.git` 
+  * `git clone https://github.com/mp4096/rsvd.git`
+  * `https://gitlab.com/libeigen/eigen/-/archive/3.3.8/eigen-3.3.8.tar.gz`
 * Download a content and style images
   * (into `stupid_android/styx_cc/app/src/main/res/drawable`)
   * Update the definition of `STYLES` in `MainActivity.java`
