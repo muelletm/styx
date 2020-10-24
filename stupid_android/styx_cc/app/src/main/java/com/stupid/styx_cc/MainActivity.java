@@ -21,7 +21,7 @@ public class MainActivity extends AppCompatActivity {
 
     private final static int PERM_REQUEST_CODE_ = 1;
     private final static int MAX_IMAGE_SIZE_ = 512;
-    private final static int MIN_IMAGE_SIZE_ = 512;
+    private final static int MIN_IMAGE_SIZE_ = 32;
     private final static int SVD_RANK_ = 128;
     private final static String MODEL_NAME_ = "stupid_relu4.tflite";
     private final static int[] STYLES = new int[]{
@@ -44,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
             R.drawable.style_12,
             R.drawable.style_13,
     };
-    private final static long AVG_MODEL_RUN_TIME_IN_MS = 70000;
+    private final static long AVG_MODEL_RUN_TIME_IN_MS = 50000;
 
     static {
         System.loadLibrary("register-svd");
@@ -100,11 +100,17 @@ public class MainActivity extends AppCompatActivity {
 
         int max_size = Math.max(bitmap.getWidth(), bitmap.getHeight());
         int new_size = Math.max(Math.min(max_size, MAX_IMAGE_SIZE_), MIN_IMAGE_SIZE_);
-        bitmap = Bitmap.createScaledBitmap(bitmap, new_size, new_size, false);
+
+        double scale_factor = (double) new_size / (double) max_size;
+
+        int new_height = (int)(bitmap.getHeight() * scale_factor);
+        int new_width = (int)(bitmap.getWidth() * scale_factor);
+
+        bitmap = Bitmap.createScaledBitmap(bitmap, new_width, new_height, false);
 
         int size = bitmap.getHeight() * bitmap.getWidth() * 3;
         Tensor tensor = new Tensor();
-        tensor.shape = new int[]{1, bitmap.getHeight(), bitmap.getWidth(), 3};
+        tensor.shape = new int[]{1, bitmap.getWidth(), bitmap.getHeight(), 3};
         tensor.data = new float[size];
         int index = 0;
         for (int x = 0; x < bitmap.getWidth(); ++x) {
@@ -144,8 +150,8 @@ public class MainActivity extends AppCompatActivity {
 
     private Bitmap TensorToBitmap(Tensor tensor, boolean red_eye) {
         Timer timer = new Timer();
-        int height = tensor.shape[1];
-        int width = tensor.shape[2];
+        int width = tensor.shape[1];
+        int height = tensor.shape[2];
 
         Bitmap.Config conf = Bitmap.Config.ARGB_8888;
         Bitmap image = Bitmap.createBitmap(width, height, conf);

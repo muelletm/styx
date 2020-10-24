@@ -8,13 +8,13 @@
 #include <time.h>
 #include <optional>
 
+#include "Eigen/Dense"
+#include "Eigen/SVD"
+#include "rsvd/RandomizedSvd.hpp"
 #include "tensorflow/lite/context.h"
 #include "tensorflow/lite/interpreter.h"
 #include "tensorflow/lite/kernels/kernel_util.h"
 #include "tensorflow/lite/kernels/register.h"
-#include "Eigen/SVD"
-#include "Eigen/Dense"
-#include "rsvd/RandomizedSvd.hpp"
 
 #define LOGI(...) \
   ((void)__android_log_print(ANDROID_LOG_INFO, "register_svd::", __VA_ARGS__))
@@ -30,7 +30,7 @@ namespace {
     long currentTimeMillis(void) {
         struct timespec res;
         clock_gettime(CLOCK_REALTIME, &res);
-        return (long)(1.0e3 * res.tv_sec + (double) res.tv_nsec / 1.0e6);
+        return (long) (1.0e3 * res.tv_sec + (double) res.tv_nsec / 1.0e6);
     }
 }
 
@@ -107,15 +107,15 @@ namespace tflite {
                 return status;
             }
 
-            void CopyVector(const Eigen::VectorXf& vector, float* data) {
+            void CopyVector(const Eigen::VectorXf &vector, float *data) {
                 for (int i = 0; i < vector.size(); i++) {
                     data[i] = (float) vector(i);
                 }
             }
 
-            void CopyMatrix(const Eigen::MatrixXf& matrix,
-                            const std::vector<int>& input_shape,
-                            float* data) {
+            void CopyMatrix(const Eigen::MatrixXf &matrix,
+                            const std::vector<int> &input_shape,
+                            float *data) {
                 for (int r = 0; r < matrix.rows(); r++) {
                     for (int c = 0; c < matrix.cols(); c++) {
                         int index = r * input_shape[0] + c;
@@ -126,7 +126,7 @@ namespace tflite {
 
             TfLiteStatus SvdEval(TfLiteContext *context, TfLiteNode *node) {
                 LOGI("SvdEval");
-                long start_time =  currentTimeMillis();
+                long start_time = currentTimeMillis();
                 using namespace tflite;
                 const TfLiteTensor *input = GetInput(context, node, 0);
                 TfLiteTensor *s = GetOutput(context, node, 0);
@@ -150,9 +150,9 @@ namespace tflite {
                     int col = index % input_shape[0];
                     input_eigen(row, col) = input_data[index];
                 }
-                if (svd_rank_ == -1 ) {
+                if (svd_rank_ == -1) {
                     Eigen::BDCSVD<Eigen::MatrixXf> svd(input_eigen,
-                                                      Eigen::ComputeFullU | Eigen::ComputeFullV);
+                                                       Eigen::ComputeFullU | Eigen::ComputeFullV);
                     const Eigen::VectorXf &s_eigen = svd.singularValues();
                     CopyVector(s_eigen, s_data);
                     const Eigen::MatrixXf &u_eigen = svd.matrixU();
@@ -162,7 +162,8 @@ namespace tflite {
                 } else {
                     std::mt19937_64 randomEngine{};
                     randomEngine.seed(777);
-                    Rsvd::RandomizedSvd<Eigen::MatrixXf, std::mt19937_64, Rsvd::SubspaceIterationConditioner::Lu> svd(randomEngine);
+                    Rsvd::RandomizedSvd <Eigen::MatrixXf, std::mt19937_64, Rsvd::SubspaceIterationConditioner::Lu> svd(
+                            randomEngine);
                     svd.compute(input_eigen, svd_rank_);
                     std::fill(s_data, s_data + NumElements(s), 0.0f);
                     std::fill(u_data, u_data + NumElements(u), 0.0f);
@@ -206,7 +207,7 @@ namespace tflite {
 
         void populateOutput(JNIEnv *env, int index, jobject output) {
             LOGI("populateOutput");
-            long start_time =  currentTimeMillis();
+            long start_time = currentTimeMillis();
             TfLiteTensor *tensor = interpreter_->output_tensor(index);
             float *data = interpreter_->typed_output_tensor<float>(index);
 
@@ -234,7 +235,7 @@ namespace tflite {
                     const std::vector<float> &style,
                     const std::vector<int> &style_shape,
                     jobject result) {
-            long start_time =  currentTimeMillis();
+            long start_time = currentTimeMillis();
             LOGI("runTransfer");
 
             if (interpreter_ == nullptr) {
@@ -263,7 +264,7 @@ namespace tflite {
             }
 
             {
-                long start_time =  currentTimeMillis();
+                long start_time = currentTimeMillis();
                 if (interpreter_->Invoke() != kTfLiteOk) {
                     return "ERROR: Cannot invoke";
                 }
@@ -365,8 +366,8 @@ Java_com_stupid_styx_1cc_MainActivity_runStyleTransfer(JNIEnv *env,
                                                        jobject result) {
 
     LOGI("runStyleTransfer");
-    svd_rank_ = (int)svd_rank;
-    long start_time =  currentTimeMillis();
+    svd_rank_ = (int) svd_rank;
+    long start_time = currentTimeMillis();
     const std::vector<float> content_data = getFloatVecField(env, content, "data");
     const std::vector<int> content_shape = getIntVecField(env, content, "shape");
     const std::vector<float> style_data = getFloatVecField(env, style, "data");
