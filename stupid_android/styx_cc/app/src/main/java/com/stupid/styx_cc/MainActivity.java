@@ -20,9 +20,7 @@ import java.util.Arrays;
 public class MainActivity extends AppCompatActivity {
 
     private final static int PERM_REQUEST_CODE_ = 1;
-    private final static int MAX_IMAGE_SIZE_ = 512;
     private final static int MIN_IMAGE_SIZE_ = 32;
-    private final static int SVD_RANK_ = 128;
     private final static String MODEL_NAME_ = "stupid_relu4.tflite";
     private final static int[] STYLES = new int[]{
             R.drawable.style1,
@@ -44,12 +42,14 @@ public class MainActivity extends AppCompatActivity {
             R.drawable.style_12,
             R.drawable.style_13,
     };
-    private final static long AVG_MODEL_RUN_TIME_IN_MS = 50000;
+    private final static long AVG_MODEL_RUN_TIME_IN_MS_PREVIEW = 15000;
+    private final static long AVG_MODEL_RUN_TIME_IN_MS_FULL = 50000;
 
     static {
         System.loadLibrary("register-svd");
     }
 
+    private ImageState image_state_ = ImageState.STYLE;
     private ModelState model_state_ = ModelState.UNINITIALIZED;
 
     private TextView tv_;
@@ -93,13 +93,13 @@ public class MainActivity extends AppCompatActivity {
         setStatus("Waiting...");
     }
 
-    private Tensor LoadResourceImageAsTensor(int resource_index) {
+    private Tensor LoadResourceImageAsTensor(int max_image_size, int resource_index) {
         Log.i("main", "LoadResourceImageAsTensor");
         Timer timer = new Timer();
         Bitmap bitmap = BitmapFactory.decodeResource(getResources(), resource_index);
 
         int max_size = Math.max(bitmap.getWidth(), bitmap.getHeight());
-        int new_size = Math.max(Math.min(max_size, MAX_IMAGE_SIZE_), MIN_IMAGE_SIZE_);
+        int new_size = Math.max(Math.min(max_size, max_image_size), MIN_IMAGE_SIZE_);
 
         double scale_factor = (double) new_size / (double) max_size;
 
@@ -197,39 +197,53 @@ public class MainActivity extends AppCompatActivity {
         assert grantResults.length == 1;
         assert permissions[0].equals(Manifest.permission.READ_EXTERNAL_STORAGE);
         if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            runModel();
+            setStatus("Permission granted.");
         } else {
             setStatus("Permission denied.");
         }
     }
 
-    private String runModel() {
+    private String runModel(boolean preview) {
         Log.i("main", "runModel");
+        int max_image_size = 512;
+        int svd_rank = 128;
+        if (preview) {
+            max_image_size = 256;
+            svd_rank = 64;
+        }
         final Timer timer = new Timer();
         if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             return "Permission denied.";
         }
-
-        Tensor content = LoadResourceImageAsTensor(R.drawable.gilbert);
-        Tensor style = LoadResourceImageAsTensor(STYLES[stylebar_.getProgress()]);
+        Tensor content = LoadResourceImageAsTensor(max_image_size, R.drawable.gilbert);
+        Tensor style = LoadResourceImageAsTensor(max_image_size, STYLES[stylebar_.getProgress()]);
         final Tensor result = new Tensor();
-        String error = runStyleTransfer(SVD_RANK_, content, style, result);
+        String error = runStyleTransfer(svd_rank, content, style, result);
         if (!error.isEmpty()) {
             return "Transfer failed: " + error;
         }
         setImage(TensorToBitmap(result, false));
         setThumbnail(STYLES[stylebar_.getProgress()]);
-        setStatus("Done (" + (timer.getTimeDelta()) + " milliseconds)");
+        if (preview) {
+            setStatus("Preview (" + (timer.getTimeDelta()) + " milliseconds)");
+        } else {
+            setStatus("Full (" + (timer.getTimeDelta()) + " milliseconds)");
+        }
         return "";
     }
 
-    void startModelThread() {
+    void startModelThread(final boolean preview) {
         new Thread(new Runnable() {
             public void run() {
-                String error = runModel();
+                String error = runModel(preview);
+                image_state_ = ImageState.PREVIEW;
                 if (!error.isEmpty()) {
                     setStatus(error);
-                    setImage(TensorToBitmap(LoadResourceImageAsTensor(R.drawable.gilbert), true));
+                    setImage(TensorToBitmap(LoadResourceImageAsTensor(Integer.MAX_VALUE, R.drawable.gilbert), true));
+                } else if (preview) {
+                    image_state_ = ImageState.PREVIEW;
+                } else {
+                    image_state_ = ImageState.FULL;
                 }
                 setModelState(ModelState.IDLE);
             }
@@ -272,7 +286,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    void startProgressThread(){
+    void startProgressThread(final boolean preview){
         new Thread(new Runnable() {
             final Timer timer = new Timer();
             public void run() {
@@ -285,9 +299,13 @@ public class MainActivity extends AppCompatActivity {
                         return;
                     }
                     double run_time = timer.getTimeDelta();
-                    double total_run_time = AVG_MODEL_RUN_TIME_IN_MS;
+                    double total_run_time = (preview)? AVG_MODEL_RUN_TIME_IN_MS_PREVIEW : AVG_MODEL_RUN_TIME_IN_MS_FULL;
                     final int progress = Math.min((int) ((run_time / total_run_time) * 100.0), 100);
-                    setStatus("Running (~" + progress + "%)");
+                    if (preview) {
+                        setStatus("Creating preview (" + progress + "%)");
+                    } else {
+                        setStatus("Creating image (" + progress + "%)");
+                    }
                     if (progress >= 100) {
                         return;
                     }
@@ -312,6 +330,7 @@ public class MainActivity extends AppCompatActivity {
                         Log.i("Stylebar", "Style: " + progress);
                         setImage(STYLES[progress]);
                         setThumbnail(R.drawable.gilbert);
+                        image_state_ = ImageState.STYLE;
                     }
 
                     @Override
@@ -341,9 +360,9 @@ public class MainActivity extends AppCompatActivity {
                     return;
                 }
                 setModelState(ModelState.RUNNING);
-                setStatus("Running ...");
-                startModelThread();
-                startProgressThread();
+                final boolean preview = image_state_ == ImageState.STYLE;
+                startModelThread(preview);
+                startProgressThread(preview);
             }
         });
 
@@ -361,6 +380,12 @@ public class MainActivity extends AppCompatActivity {
                                            Tensor content,
                                            Tensor style,
                                            Tensor result);
+
+    enum ImageState {
+        STYLE,
+        PREVIEW,
+        FULL,
+    }
 
     enum ModelState {
         UNINITIALIZED,
