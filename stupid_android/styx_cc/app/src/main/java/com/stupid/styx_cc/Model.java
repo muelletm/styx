@@ -9,7 +9,7 @@ public class Model {
     private final static int MIN_IMAGE_SIZE_ = 32;
 
     static {
-        System.loadLibrary("model");
+        System.loadLibrary("styx");
     }
 
     public String name;
