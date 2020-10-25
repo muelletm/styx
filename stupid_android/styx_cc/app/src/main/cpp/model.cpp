@@ -15,10 +15,10 @@
 #include "timing.h"
 
 #define LOGI(...) \
-  ((void)__android_log_print(ANDROID_LOG_INFO, "register_svd::", __VA_ARGS__))
+  ((void)__android_log_print(ANDROID_LOG_INFO, "model::", __VA_ARGS__))
 
 #define LOGE(...) \
-  ((void)__android_log_print(ANDROID_LOG_ERROR, "register_svd::", __VA_ARGS__))
+  ((void)__android_log_print(ANDROID_LOG_ERROR, "model::", __VA_ARGS__))
 
 static tflite::FlatBufferModel *model_ = nullptr;
 static tflite::Interpreter *interpreter_ = nullptr;
