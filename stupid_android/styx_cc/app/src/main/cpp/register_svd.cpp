@@ -150,7 +150,16 @@ namespace tflite {
                     int col = index % input_shape[0];
                     input_eigen(row, col) = input_data[index];
                 }
-                if (svd_rank_ == -1) {
+                const int max_rank = std::min(input_eigen.cols(), input_eigen.rows());
+                int rank = svd_rank_;
+                if (rank >= max_rank) {
+                    LOGI(
+                            "Setting rank to full rank (svd rank %d, max rank: %d).",
+                            svd_rank_,
+                            max_rank);
+                    rank = -1;
+                }
+                if (rank == -1) {
                     Eigen::BDCSVD<Eigen::MatrixXf> svd(input_eigen,
                                                        Eigen::ComputeFullU | Eigen::ComputeFullV);
                     const Eigen::VectorXf &s_eigen = svd.singularValues();
@@ -164,7 +173,7 @@ namespace tflite {
                     randomEngine.seed(777);
                     Rsvd::RandomizedSvd <Eigen::MatrixXf, std::mt19937_64, Rsvd::SubspaceIterationConditioner::Lu> svd(
                             randomEngine);
-                    svd.compute(input_eigen, svd_rank_);
+                    svd.compute(input_eigen, rank);
                     std::fill(s_data, s_data + NumElements(s), 0.0f);
                     std::fill(u_data, u_data + NumElements(u), 0.0f);
                     std::fill(v_data, v_data + NumElements(v), 0.0f);

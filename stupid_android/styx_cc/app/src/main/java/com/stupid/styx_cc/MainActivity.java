@@ -5,6 +5,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.ColorSpace;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
@@ -21,7 +22,6 @@ public class MainActivity extends AppCompatActivity {
 
     private final static int PERM_REQUEST_CODE_ = 1;
     private final static int MIN_IMAGE_SIZE_ = 32;
-    private final static String MODEL_NAME_ = "stupid_relu4.tflite";
     private final static int[] STYLES = new int[]{
             R.drawable.style1,
             R.drawable.style2,
@@ -42,8 +42,14 @@ public class MainActivity extends AppCompatActivity {
             R.drawable.style_12,
             R.drawable.style_13,
     };
-    private final static long AVG_MODEL_RUN_TIME_IN_MS_PREVIEW = 15000;
-    private final static long AVG_MODEL_RUN_TIME_IN_MS_FULL = 50000;
+
+    private ModelInfo big_model_info_ = new ModelInfo("big4321.tflite",
+            new ModelConfig(25000, 64, 256),
+            new ModelConfig( 85000, 128, 512));
+
+    ModelInfo getModelInfo() {
+        return big_model_info_;
+    }
 
     static {
         System.loadLibrary("register-svd");
@@ -57,18 +63,18 @@ public class MainActivity extends AppCompatActivity {
     private SeekBar stylebar_;
     private ImageView thumbnail_;
 
-    private File getModelFile() {
+    private File getModelFile(ModelInfo info) {
         Log.i("main", "getModelFile");
         File downloads = Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_DOWNLOADS);
-        File model_file = new File(downloads, MODEL_NAME_);
+        File model_file = new File(downloads, info.name);
         if (!model_file.exists()) {
             throw new RuntimeException("No such file: " + model_file.getAbsolutePath());
         }
         return model_file;
     }
 
-    private void InitModel() {
+    private void InitModel(ModelInfo info) {
         Log.i("main", "InitModel");
         if (model_state_ != ModelState.UNINITIALIZED) {
             // The model has already been initialized.
@@ -79,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         try {
-            File modelPath = getModelFile();
+            File modelPath = getModelFile(info);
             String init_message = prepareInterpreter(modelPath.getAbsolutePath());
             if (!init_message.isEmpty()) {
                 setStatus("Init failed: " + init_message);
@@ -93,7 +99,8 @@ public class MainActivity extends AppCompatActivity {
         setStatus("Waiting...");
     }
 
-    private Tensor LoadResourceImageAsTensor(int max_image_size, int resource_index) {
+    private Tensor LoadResourceImageAsTensor(int max_image_size,
+                                             int resource_index) {
         Log.i("main", "LoadResourceImageAsTensor");
         Timer timer = new Timer();
         Bitmap bitmap = BitmapFactory.decodeResource(getResources(), resource_index);
@@ -125,11 +132,11 @@ public class MainActivity extends AppCompatActivity {
                 assert green >= 0 && green <= 255;
                 assert blue >= 0 && blue <= 255;
 
-                tensor.data[index] = red / 255.0f;
+                tensor.data[index] = red;
                 index++;
-                tensor.data[index] = green / 255.0f;
+                tensor.data[index] = green;
                 index++;
-                tensor.data[index] = blue / 255.0f;
+                tensor.data[index] = blue;
                 index++;
             }
         }
@@ -138,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private int toColorValue(float value) {
-        int int_value = (int) (value * 255.f);
+        int int_value = (int) (value);
         if (int_value < 0) {
             return 0;
         }
@@ -148,7 +155,7 @@ public class MainActivity extends AppCompatActivity {
         return int_value;
     }
 
-    private Bitmap TensorToBitmap(Tensor tensor, boolean red_eye) {
+    private Bitmap TensorToBitmap(Tensor tensor) {
         Timer timer = new Timer();
         int width = tensor.shape[1];
         int height = tensor.shape[2];
@@ -165,11 +172,6 @@ public class MainActivity extends AppCompatActivity {
                 index++;
                 int blue = toColorValue(tensor.data[index]);
                 index++;
-
-                if (red_eye) {
-                    green = 0;
-                    blue = 0;
-                }
                 int color = Color.rgb(
                         red,
                         green,
@@ -203,26 +205,25 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private String runModel(boolean preview) {
+    private String runModel(ModelInfo info, boolean preview) {
         Log.i("main", "runModel");
-        int max_image_size = 512;
-        int svd_rank = 128;
-        if (preview) {
-            max_image_size = 256;
-            svd_rank = 64;
-        }
+        ModelConfig config = info.getModelConfig(preview);
         final Timer timer = new Timer();
         if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             return "Permission denied.";
         }
-        Tensor content = LoadResourceImageAsTensor(max_image_size, R.drawable.gilbert);
-        Tensor style = LoadResourceImageAsTensor(max_image_size, STYLES[stylebar_.getProgress()]);
+        Tensor content = LoadResourceImageAsTensor(
+                config.max_image_size,
+                R.drawable.gilbert);
+        Tensor style = LoadResourceImageAsTensor(
+                config.max_image_size,
+                STYLES[stylebar_.getProgress()]);
         final Tensor result = new Tensor();
-        String error = runStyleTransfer(svd_rank, content, style, result);
+        String error = runStyleTransfer(config.svd_rank, content, style, result);
         if (!error.isEmpty()) {
             return "Transfer failed: " + error;
         }
-        setImage(TensorToBitmap(result, false));
+        setImage(TensorToBitmap(result));
         setThumbnail(STYLES[stylebar_.getProgress()]);
         if (preview) {
             setStatus("Preview (" + (timer.getTimeDelta()) + " milliseconds)");
@@ -232,14 +233,13 @@ public class MainActivity extends AppCompatActivity {
         return "";
     }
 
-    void startModelThread(final boolean preview) {
+    void startModelThread(final ModelInfo info, final boolean preview) {
         new Thread(new Runnable() {
             public void run() {
-                String error = runModel(preview);
+                String error = runModel(info, preview);
                 image_state_ = ImageState.PREVIEW;
                 if (!error.isEmpty()) {
                     setStatus(error);
-                    setImage(TensorToBitmap(LoadResourceImageAsTensor(Integer.MAX_VALUE, R.drawable.gilbert), true));
                 } else if (preview) {
                     image_state_ = ImageState.PREVIEW;
                 } else {
@@ -286,7 +286,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    void startProgressThread(final boolean preview){
+    void startProgressThread(final ModelInfo info, final boolean preview){
         new Thread(new Runnable() {
             final Timer timer = new Timer();
             public void run() {
@@ -299,7 +299,7 @@ public class MainActivity extends AppCompatActivity {
                         return;
                     }
                     double run_time = timer.getTimeDelta();
-                    double total_run_time = (preview)? AVG_MODEL_RUN_TIME_IN_MS_PREVIEW : AVG_MODEL_RUN_TIME_IN_MS_FULL;
+                    double total_run_time = info.getModelConfig(preview).runtime_ins_ms;
                     final int progress = Math.min((int) ((run_time / total_run_time) * 100.0), 100);
                     if (preview) {
                         setStatus("Creating preview (" + progress + "%)");
@@ -353,16 +353,17 @@ public class MainActivity extends AppCompatActivity {
         image_.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                ModelInfo info = getModelInfo();
                 if (model_state_ == ModelState.UNINITIALIZED) {
-                    InitModel();
+                    InitModel(info);
                 }
                 if (model_state_ != ModelState.IDLE) {
                     return;
                 }
                 setModelState(ModelState.RUNNING);
                 final boolean preview = image_state_ == ImageState.STYLE;
-                startModelThread(preview);
-                startProgressThread(preview);
+                startModelThread(info, preview);
+                startProgressThread(info, preview);
             }
         });
 
@@ -435,4 +436,35 @@ public class MainActivity extends AppCompatActivity {
             return output;
         }
     }
+
+    private class ModelConfig {
+        ModelConfig(
+                int runtime_ins_ms,
+                int svd_rank,
+                int max_image_size) {
+            this.runtime_ins_ms = runtime_ins_ms;
+            this.svd_rank = svd_rank;
+            this.max_image_size = max_image_size;
+        }
+
+        public int runtime_ins_ms;
+        public int svd_rank;
+        public int max_image_size;
+    }
+
+    private class ModelInfo {
+        public ModelInfo(String name, ModelConfig preview, ModelConfig full) {
+            this.name = name;
+            this.preview_ = preview;
+            this.full_ = full;
+        }
+
+        ModelConfig getModelConfig(boolean preview) {
+            return (preview)? preview_: full_;
+        }
+
+        public String name;
+        public ModelConfig preview_;
+        public ModelConfig full_;
+    };
 }
