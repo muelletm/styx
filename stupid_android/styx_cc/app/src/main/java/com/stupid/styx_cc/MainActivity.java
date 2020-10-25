@@ -4,7 +4,6 @@ import android.Manifest;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
@@ -15,7 +14,6 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import java.io.File;
-import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -298,13 +296,13 @@ public class MainActivity extends AppCompatActivity {
         model_state_ = state;
     }
 
-    enum ImageState {
+    private enum ImageState {
         STYLE,
         PREVIEW,
         FULL,
     }
 
-    enum ModelState {
+    private enum ModelState {
         UNINITIALIZED,
         RUNNING,
         IDLE,
