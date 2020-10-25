@@ -34,32 +34,17 @@ ${EIGEN_DIR}
 ${RSVD}
 )
 
-link_directories(${TFLITE_LIB_DIR})
+link_directories(
+        ${TFLITE_LIB_DIR}
+)
 find_library(libtensorflowlite tensorflowlite)
-
-add_library(lib_gmath STATIC IMPORTED)
-set_target_properties(lib_gmath PROPERTIES IMPORTED_LOCATION
-    ${distribution_DIR}/gmath/lib/${ANDROID_ABI}/libgmath.a)
-
-# ${ANDROID_ABI} is handy for our purpose here. Probably this ${ANDROID_ABI} is
-# the most valuable thing of this sample, the rest are pretty much normal cmake
-add_library(lib_gperf SHARED IMPORTED)
-set_target_properties(lib_gperf PROPERTIES IMPORTED_LOCATION
-    ${distribution_DIR}/gperf/lib/${ANDROID_ABI}/libgperf.so)
 
 # build application's shared lib
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11")
 
-add_library(register-svd SHARED
-        register_svd.cpp)
+add_library(styx SHARED timing.h jni_utils.h svd_op.h timing.cpp jni_utils.cpp svd_op.cpp model.cpp)
 
-target_include_directories(register-svd PRIVATE
-                           ${distribution_DIR}/gmath/include
-                           ${distribution_DIR}/gperf/include)
-
-target_link_libraries(register-svd
+target_link_libraries(styx
                       android
-                      lib_gmath
-                      lib_gperf
                       log
                       tensorflowlite)
