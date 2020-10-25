@@ -360,19 +360,19 @@ namespace {
 }  // namespace
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_stupid_styx_1cc_MainActivity_prepareInterpreter(JNIEnv *env, jobject thiz,
-                                                         jstring modelPath) {
+Java_com_stupid_styx_1cc_Model_prepareInterpreter(JNIEnv *env, jobject thiz,
+                                                  jstring modelPath) {
     std::string output = tflite::PrepareInterpreter(jstringToString(env, modelPath));
     return env->NewStringUTF(output.c_str());
 }
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_stupid_styx_1cc_MainActivity_runStyleTransfer(JNIEnv *env,
-                                                       jobject thiz,
-                                                       jint svd_rank,
-                                                       jobject content,
-                                                       jobject style,
-                                                       jobject result) {
+Java_com_stupid_styx_1cc_Model_runStyleTransfer(JNIEnv *env,
+                                                jobject thiz,
+                                                jint svd_rank,
+                                                jobject content,
+                                                jobject style,
+                                                jobject result) {
 
     LOGI("runStyleTransfer");
     svd_rank_ = (int) svd_rank;
