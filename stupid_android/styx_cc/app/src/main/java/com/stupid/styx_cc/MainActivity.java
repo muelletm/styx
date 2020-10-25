@@ -155,8 +155,8 @@ public class MainActivity extends AppCompatActivity {
         Bitmap style = GetBitmapResource(STYLES[stylebar_.getProgress()]);
         try {
             Bitmap image = model.Run(preview, content, style);
-            int new_height = image_.getDrawable().getIntrinsicHeight();
-            int new_width = image_.getDrawable().getIntrinsicWidth();
+            int new_height = content.getHeight();
+            int new_width = content.getWidth();
             image = Bitmap.createScaledBitmap(image, new_width, new_height, true);
             setImage(image);
         } catch (Model.ExecutionError error) {
