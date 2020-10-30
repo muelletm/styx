@@ -12,18 +12,16 @@ public class Model {
         System.loadLibrary("styx");
     }
 
-    public String name;
     public ModelConfig preview_;
     public ModelConfig full_;
 
     public Model(String name, ModelConfig preview, ModelConfig full) {
-        this.name = name;
         this.preview_ = preview;
         this.full_ = full;
     }
 
-    public String Init(String model_path) {
-        return prepareInterpreter(model_path);
+    public String Init() {
+        return prepareInterpreter();
     }
 
     public Bitmap Run(
@@ -130,7 +128,7 @@ public class Model {
         return image;
     }
 
-    private native String prepareInterpreter(String model_path);
+    private native String prepareInterpreter();
 
     private native String runStyleTransfer(int svd_rank,
                                            Tensor content,

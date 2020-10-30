@@ -42,7 +42,7 @@ find_library(libtensorflowlite tensorflowlite)
 # build application's shared lib
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11")
 
-add_library(styx SHARED timing.h jni_utils.h svd_op.h timing.cpp jni_utils.cpp svd_op.cpp model.cpp)
+add_library(styx SHARED timing.h jni_utils.h svd_op.h timing.cpp jni_utils.cpp svd_op.cpp big4321_dq.h big4321_dq.cpp model.cpp)
 
 target_link_libraries(styx
                       android

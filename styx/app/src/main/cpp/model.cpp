@@ -13,6 +13,7 @@
 #include "jni_utils.h"
 #include "svd_op.h"
 #include "timing.h"
+#include "big4321_dq.h"
 
 #define LOGI(...) \
   ((void)__android_log_print(ANDROID_LOG_INFO, "model::", __VA_ARGS__))
@@ -20,19 +21,21 @@
 #define LOGE(...) \
   ((void)__android_log_print(ANDROID_LOG_ERROR, "model::", __VA_ARGS__))
 
-static tflite::FlatBufferModel *model_ = nullptr;
+static const tflite::Model* model_ = nullptr;
+static tflite::FlatBufferModel *fb_model_ = nullptr;
 static tflite::Interpreter *interpreter_ = nullptr;
 
-std::string PrepareInterpreter(const std::string &modelPath) {
-    model_ = tflite::FlatBufferModel::BuildFromFile(modelPath.c_str()).release();
+std::string PrepareInterpreter() {
+    model_ = tflite::GetModel(big4321_dq_model);
+    fb_model_ = tflite::FlatBufferModel::BuildFromModel(model_).release();
     if (model_ == nullptr) {
-        return "No such file: '" + std::string(modelPath) + "'";
+        return "Cannot create model";
     }
 
     std::unique_ptr<tflite::Interpreter> interpreter;
     tflite::ops::builtin::BuiltinOpResolver resolver;
     resolver.AddCustom("Svd", tflite::ops::custom::Register_SVD());
-    if (tflite::InterpreterBuilder(*model_, resolver)(&interpreter) != kTfLiteOk) {
+    if (tflite::InterpreterBuilder(*fb_model_, resolver)(&interpreter) != kTfLiteOk) {
         return "Cannot build interpreter";
     }
     interpreter_ = interpreter.release();
@@ -119,9 +122,8 @@ runTransfer(JNIEnv *env,
 }
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_stupid_styx_Model_prepareInterpreter(JNIEnv *env, jobject thiz,
-                                                  jstring modelPath) {
-    std::string output = PrepareInterpreter(jstringToString(env, modelPath));
+Java_com_stupid_styx_Model_prepareInterpreter(JNIEnv *env, jobject thiz) {
+    std::string output = PrepareInterpreter();
     return env->NewStringUTF(output.c_str());
 }
 

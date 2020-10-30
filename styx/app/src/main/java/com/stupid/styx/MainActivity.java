@@ -17,7 +17,6 @@ import java.io.File;
 
 public class MainActivity extends AppCompatActivity {
 
-    private final static int PERM_REQUEST_CODE_ = 1;
     private final static int[] STYLES = new int[]{
             R.drawable.style1,
             R.drawable.style2,
@@ -89,30 +88,14 @@ public class MainActivity extends AppCompatActivity {
         return model_;
     }
 
-    private File getModelFile(Model model) {
-        Log.i("main", "getModelFile");
-        File downloads = Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_DOWNLOADS);
-        File model_file = new File(downloads, model.name);
-        if (!model_file.exists()) {
-            throw new RuntimeException("No such file: " + model_file.getAbsolutePath());
-        }
-        return model_file;
-    }
-
     private void InitModel(Model model) {
         Log.i("main", "InitModel");
         if (model_state_ != ModelState.UNINITIALIZED) {
             // The model has already been initialized.
             return;
         }
-        if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            setStatus("Storage permission denied.");
-            return;
-        }
         try {
-            File modelPath = getModelFile(model);
-            String init_message = model.Init(modelPath.getAbsolutePath());
+            String init_message = model.Init();
             if (!init_message.isEmpty()) {
                 setStatus("Init failed: " + init_message);
                 return;
@@ -125,22 +108,6 @@ public class MainActivity extends AppCompatActivity {
         setStatus("Waiting...");
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           String[] permissions,
-                                           int[] grantResults) {
-        Log.i("main", "onRequestPermissionsResult");
-        assert requestCode == PERM_REQUEST_CODE_;
-        assert permissions.length == 1;
-        assert grantResults.length == 1;
-        assert permissions[0].equals(Manifest.permission.READ_EXTERNAL_STORAGE);
-        if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            setStatus("Permission granted.");
-        } else {
-            setStatus("Permission denied.");
-        }
-    }
-
     private Bitmap GetBitmapResource(int resource_index) {
         return BitmapFactory.decodeResource(getResources(), resource_index);
     }
@@ -148,9 +115,6 @@ public class MainActivity extends AppCompatActivity {
     private String runModel(Model model, boolean preview) {
         Log.i("main", "runModel");
         final Timer timer = new Timer();
-        if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            return "Permission denied.";
-        }
         Bitmap content = GetBitmapResource(R.drawable.gilbert);
         Bitmap style = GetBitmapResource(STYLES[stylebar_.getProgress()]);
         try {
@@ -306,12 +270,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            setStatus("Waiting for permissions");
-            requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERM_REQUEST_CODE_);
-        } else {
-            setStatus("Good to go!");
-        }
+        setStatus("Good to go!");
     }
 
     private void setStyleBarEnabled(final boolean enabled) {
