@@ -1,27 +1,38 @@
-### Keep it STUPID
+StyxCC
+=========
 
-eine sammlung von funktionen für ai und google colab
-github : http://github.com/bomelino/stupid
+Based on https://developer.android.com/studio/projects/add-native-code.
 
-in colab: 
-	
-! pip install --upgrade --index-url https://test.pypi.org/simple stupid-bomelino
-import stupid
-
-### build python & upload
-
-`python setup.py sdist bdist_wheel`
-`twine upload --skip-existing --repository testpypi dist/*`
+## Install instructions
 
 
+* Import the project into Android Studio
+* Get the dependencies and set the paths in `CMakeLists.txt`
+  * `git clone https://github.com/tensorflow/tensorflow.git`
+  * `git clone https://github.com/google/flatbuffers.git` 
+  * `git clone https://github.com/mp4096/rsvd.git`
+  * `https://gitlab.com/libeigen/eigen/-/archive/3.3.8/eigen-3.3.8.tar.gz`
+* Download a content and style images
+  * (into `stupid_android/styx_cc/app/src/main/res/drawable`)
+  * Update the definition of `STYLES` in `MainActivity.java`
+* Build the APK and install it on your phone
+* Download the style transfer tflite model
+  * [stupid_relu4.tflite](https://drive.google.com/drive/u/0/folders/1GWfb4EcM7-WFKCCM7ZHlimE_J6bS4ExW)
+* Launch the app and give it permission to read storage files
 
-### testpypi url
 
-https://test.pypi.org/project/stupid-bomelino/
+Licensed to the Apache Software Foundation (ASF) under one or more contributor
+license agreements.  See the NOTICE file distributed with this work for
+additional information regarding copyright ownership.  The ASF licenses this
+file to you under the Apache License, Version 2.0 (the "License"); you may not
+use this file except in compliance with the License.  You may obtain a copy of
+the License at
 
+  http://www.apache.org/licenses/LICENSE-2.0
 
-### tensorflow cuda on windows
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+License for the specific language governing permissions and limitations under
+the License.
 
-Directory : C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.2\bin\
-
-Download Link : https://www.dll-files.com/download/1d7955354884a9058e89bb8ea34415c9/cudart64_101.dll.html?c=N09pWDBSTVYxRE1rM2hpNjVUa2doQT09
