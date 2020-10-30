@@ -6,7 +6,6 @@ Based on
 Created with:
 
 xxd -i big4321_dq.tflite > styx/app/src/main/cpp/big4321_dq.cpp
-
 */
 
 extern const unsigned int big4321_dq_length;

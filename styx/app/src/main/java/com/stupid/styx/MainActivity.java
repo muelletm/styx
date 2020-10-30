@@ -1,11 +1,15 @@
 package com.stupid.styx;
 
 import android.Manifest;
+import android.content.ContentValues;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -14,28 +18,17 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+
+import static java.io.File.separator;
 
 public class MainActivity extends AppCompatActivity {
 
+    private final static int PERM_REQUEST_CODE_ = 1;
     private final static int[] STYLES = new int[]{
-            R.drawable.style1,
-            R.drawable.style2,
-            R.drawable.style3,
-            R.drawable.style4,
-            R.drawable.style5,
-            R.drawable.style_1,
-            R.drawable.style_2,
-            R.drawable.style_3,
-            R.drawable.style_4,
-            R.drawable.style_5,
-            R.drawable.style_6,
-            R.drawable.style_7,
-            R.drawable.style_8,
-            R.drawable.style_9,
-            R.drawable.style_10,
-            R.drawable.style_11,
-            R.drawable.style_12,
-            R.drawable.style_13,
             R.drawable.art_2092530_640,
             R.drawable.art_2108118_640,
             R.drawable.art_3125816_640,
@@ -74,15 +67,16 @@ public class MainActivity extends AppCompatActivity {
             R.drawable.woman_5668428_640,
     };
 
-    private Model model_ = new Model("big4321_dq.tflite",
+    private final Model model_ = new Model("big4321_dq.tflite",
             new ModelConfig(25000, 64, 256),
             new ModelConfig(85000, 128, 512));
     private ImageState image_state_ = ImageState.STYLE;
     private ModelState model_state_ = ModelState.UNINITIALIZED;
     private TextView tv_;
-    private ImageView image_;
+    private ImageView image_view_;
     private SeekBar stylebar_;
     private ImageView thumbnail_;
+    private Bitmap image_;
 
     Model getModel() {
         return model_;
@@ -112,21 +106,88 @@ public class MainActivity extends AppCompatActivity {
         return BitmapFactory.decodeResource(getResources(), resource_index);
     }
 
+    private ContentValues contentValues() {
+        ContentValues values = new ContentValues();
+        values.put(MediaStore.Images.Media.MIME_TYPE, "image/png");
+        values.put(MediaStore.Images.Media.DATE_ADDED, System.currentTimeMillis() / 1000);
+        values.put(MediaStore.Images.Media.DATE_TAKEN, System.currentTimeMillis());
+        return values;
+    }
+
+    private void saveImageToStream(Bitmap bitmap, OutputStream outputStream) throws IOException {
+        if (outputStream != null) {
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream);
+            outputStream.flush();
+            outputStream.close();
+        }
+    }
+
+    private void saveImage(Bitmap bitmap, Context context, String name) throws IOException {
+        if (android.os.Build.VERSION.SDK_INT >= 29) {
+            Log.i("saveMediaImage", "New API");
+            ContentValues values = contentValues();
+            values.put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures" + separator + "styx");
+            values.put(MediaStore.Images.Media.IS_PENDING, true);
+            values.put(MediaStore.Images.Media.DISPLAY_NAME, name);
+            Uri uri = context.getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+            if (uri != null) {
+                saveImageToStream(bitmap, context.getContentResolver().openOutputStream(uri));
+                values.put(MediaStore.Images.Media.IS_PENDING, false);
+                context.getContentResolver().update(uri, values, null, null);
+            }
+        } else {
+            Log.i("saveMediaImage", "Old API");
+            File directory = new File(Environment.getExternalStorageDirectory().toString(), "styx");
+            if (!directory.exists()) {
+                if(!directory.mkdirs()) {
+                    throw new FileNotFoundException("Cannot create directory: " + directory.getAbsolutePath());
+                }
+            }
+            String fileName = name + ".png";
+            File file = new File(directory, fileName);
+            saveImageToStream(bitmap, new FileOutputStream(file));
+            if (file.getAbsolutePath() != null) {
+                ContentValues values = contentValues();
+                values.put(MediaStore.Images.Media.DATA, file.getAbsolutePath());
+                context.getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+            }
+        }
+    }
+
+    private void saveImageThread(final Bitmap image,final int style_id) {
+        new Thread(new Runnable() {
+            public void run() {
+                if (image == null) {
+                    setStatus("Image is null.");
+                }
+                if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                    setStatus("No permission to write files.");
+                }
+                try {
+                    saveImage(image, getApplicationContext(), getResources().getResourceEntryName(style_id));
+                } catch (IOException e) {
+                    setStatus(e.getMessage());
+                }
+                setStatus("Image saved.");
+            }}).start();
+    }
+
     private String runModel(Model model, boolean preview) {
         Log.i("main", "runModel");
         final Timer timer = new Timer();
         Bitmap content = GetBitmapResource(R.drawable.gilbert);
-        Bitmap style = GetBitmapResource(STYLES[stylebar_.getProgress()]);
+        int style_id = STYLES[stylebar_.getProgress()];
+        Bitmap style = GetBitmapResource(style_id);
         try {
-            Bitmap image = model.Run(preview, content, style);
+            image_ = model.Run(preview, content, style);
             int new_height = content.getHeight();
             int new_width = content.getWidth();
-            image = Bitmap.createScaledBitmap(image, new_width, new_height, true);
-            setImage(image);
+            image_ = Bitmap.createScaledBitmap(image_, new_width, new_height, true);
+            setImage(image_);
         } catch (Model.ExecutionError error) {
             return "Transfer failed: " + error.getMessage();
         }
-        setThumbnail(STYLES[stylebar_.getProgress()]);
+        setThumbnail(style_id);
         if (preview) {
             setStatus("Preview (" + (timer.getTimeDelta()) + " milliseconds)");
         } else {
@@ -165,7 +226,7 @@ public class MainActivity extends AppCompatActivity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                image_.setImageBitmap(bitmap);
+                image_view_.setImageBitmap(bitmap);
             }
         });
     }
@@ -174,7 +235,7 @@ public class MainActivity extends AppCompatActivity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                image_.setImageResource(resource);
+                image_view_.setImageResource(resource);
             }
         });
     }
@@ -234,6 +295,7 @@ public class MainActivity extends AppCompatActivity {
                         setImage(STYLES[progress]);
                         setThumbnail(R.drawable.gilbert);
                         image_state_ = ImageState.STYLE;
+                        image_ = null;
                     }
 
                     @Override
@@ -249,11 +311,11 @@ public class MainActivity extends AppCompatActivity {
         );
 
 
-        image_ = findViewById(R.id.styleView);
+        image_view_ = findViewById(R.id.styleView);
         thumbnail_ = findViewById(R.id.Thumbnail);
         tv_ = findViewById(R.id.textView);
 
-        image_.setOnClickListener(new View.OnClickListener() {
+        image_view_.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Model model = getModel();
@@ -264,13 +326,42 @@ public class MainActivity extends AppCompatActivity {
                     return;
                 }
                 setModelState(ModelState.RUNNING);
-                final boolean preview = image_state_ == ImageState.STYLE;
-                startModelThread(model, preview);
-                startProgressThread(model, preview);
+                switch (image_state_) {
+                    case STYLE:
+                    case PREVIEW:
+                        final boolean preview = image_state_ == ImageState.STYLE;
+                        startModelThread(model, preview);
+                        startProgressThread(model, preview);
+                        break;
+                    case FULL:
+                        saveImageThread(image_, STYLES[stylebar_.getProgress()]);
+                        break;
+                }
             }
         });
 
-        setStatus("Good to go!");
+        if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            setStatus("Waiting for permissions");
+            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERM_REQUEST_CODE_);
+        } else {
+            setStatus("Good to go!");
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String[] permissions,
+                                           int[] grantResults) {
+        Log.i("main", "onRequestPermissionsResult");
+        assert requestCode == PERM_REQUEST_CODE_;
+        assert permissions.length == 1;
+        assert grantResults.length == 1;
+        assert permissions[0].equals(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            setStatus("Permission granted.");
+        } else {
+            setStatus("Permission denied.");
+        }
     }
 
     private void setStyleBarEnabled(final boolean enabled) {
@@ -283,11 +374,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setModelState(ModelState state) {
-        if (state == ModelState.RUNNING) {
-            setStyleBarEnabled(false);
-        } else {
-            setStyleBarEnabled(true);
-        }
+        setStyleBarEnabled(state != ModelState.RUNNING);
         model_state_ = state;
     }
 
