@@ -29,25 +29,25 @@ public class MainActivity extends AppCompatActivity {
 
     private final static int PERM_REQUEST_CODE_ = 1;
     private final static int[] STYLES = new int[]{
-            R.drawable.art_2092530_640,
-            R.drawable.art_2108118_640,
-            R.drawable.art_3125816_640,
-            R.drawable.art_4178302_640,
-            R.drawable.background_2719576_640,
-            R.drawable.background_2734972_640,
-            R.drawable.background_2743842_640,
-            R.drawable.camel_5674406_640,
-            R.drawable.cartoon_5544856_640,
-            R.drawable.color_4287692_640,
-            R.drawable.elephant_5671866_640,
-            R.drawable.eye_2555760_640,
-            R.drawable.forest_5656930_640,
-            R.drawable.fox_5617008_640,
-            R.drawable.girl_2242858_640,
-            R.drawable.golden_gate_bridge_5673315_640,
-            R.drawable.halloween_5658809_640,
-            R.drawable.heart_5677354_640,
-            R.drawable.image_1247354_640,
+//            R.drawable.art_2092530_640,
+//            R.drawable.art_2108118_640,
+//            R.drawable.art_3125816_640,
+//            R.drawable.art_4178302_640,
+//            R.drawable.background_2719576_640,
+//            R.drawable.background_2734972_640,
+//            R.drawable.background_2743842_640,
+//            R.drawable.camel_5674406_640,
+//            R.drawable.cartoon_5544856_640,
+//            R.drawable.color_4287692_640,
+//            R.drawable.elephant_5671866_640,
+//            R.drawable.eye_2555760_640,
+//            R.drawable.forest_5656930_640,
+//            R.drawable.fox_5617008_640,
+//            R.drawable.girl_2242858_640,
+//            R.drawable.golden_gate_bridge_5673315_640,
+//            R.drawable.halloween_5658809_640,
+//            R.drawable.heart_5677354_640,
+//            R.drawable.image_1247354_640,
             R.drawable.lace_5674462_640,
             R.drawable.landscape_4258253_640,
             R.drawable.loveourplanet_4851331_640,
@@ -139,7 +139,7 @@ public class MainActivity extends AppCompatActivity {
             Log.i("saveMediaImage", "Old API");
             File directory = new File(Environment.getExternalStorageDirectory().toString(), "styx");
             if (!directory.exists()) {
-                if(!directory.mkdirs()) {
+                if (!directory.mkdirs()) {
                     throw new FileNotFoundException("Cannot create directory: " + directory.getAbsolutePath());
                 }
             }
@@ -154,8 +154,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void saveImageThread(final Bitmap image,final int style_id) {
-        new Thread(new Runnable() {
+    private Thread saveImageThread(final Bitmap image, final int style_id) {
+        Thread thread = new Thread(new Runnable() {
             public void run() {
                 if (image == null) {
                     setStatus("Image is null.");
@@ -169,7 +169,10 @@ public class MainActivity extends AppCompatActivity {
                     setStatus(e.getMessage());
                 }
                 setStatus("Image saved.");
-            }}).start();
+            }
+        });
+        thread.start();
+        return thread;
     }
 
     private String runModel(Model model, boolean preview) {
@@ -196,8 +199,8 @@ public class MainActivity extends AppCompatActivity {
         return "";
     }
 
-    private void startModelThread(final Model model, final boolean preview) {
-        new Thread(new Runnable() {
+    private Thread startModelThread(final Model model, final boolean preview) {
+        Thread thread = new Thread(new Runnable() {
             public void run() {
                 String error = runModel(model, preview);
                 image_state_ = ImageState.PREVIEW;
@@ -210,7 +213,9 @@ public class MainActivity extends AppCompatActivity {
                 }
                 setModelState(ModelState.IDLE);
             }
-        }).start();
+        });
+        thread.start();
+        return thread;
     }
 
     private void setStatus(final String status_message) {
@@ -249,8 +254,8 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void startProgressThread(final Model model, final boolean preview) {
-        new Thread(new Runnable() {
+    private Thread startProgressThread(final Model model, final boolean preview) {
+        Thread thread = new Thread(new Runnable() {
             final Timer timer = new Timer();
 
             public void run() {
@@ -275,7 +280,9 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             }
-        }).start();
+        });
+        thread.start();
+        return thread;
     }
 
     @Override
@@ -346,6 +353,15 @@ public class MainActivity extends AppCompatActivity {
         } else {
             setStatus("Good to go!");
         }
+
+        thumbnail_.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        runAndSaveAll(false);
+                    }
+                }
+        );
     }
 
     @Override
@@ -376,6 +392,42 @@ public class MainActivity extends AppCompatActivity {
     private void setModelState(ModelState state) {
         setStyleBarEnabled(state != ModelState.RUNNING);
         model_state_ = state;
+    }
+
+    void runAndSaveAll(final boolean preview) {
+        new Thread(new Runnable() {
+            public void run() {
+                Log.i("runAndSaveAll", "Disable UI");
+                stylebar_.setEnabled(false);
+                image_view_.setEnabled(false);
+                Model model = getModel();
+                if (model_state_ == ModelState.UNINITIALIZED) {
+                    InitModel(model);
+                }
+                for (int i = stylebar_.getMin(); i <= stylebar_.getMax(); ++i) {
+                    Log.i("runAndSaveAll", "Processing: " + i);
+                    try {
+                        stylebar_.setProgress(i);
+                        model_state_ = ModelState.RUNNING;
+                        Thread model_thread = startModelThread(model, preview);
+                        Thread progress_thread = startProgressThread(model, preview);
+                        model_thread.join();
+                        model_state_ = ModelState.IDLE;
+                        progress_thread.join();
+                        Log.i("runAndSaveAll", "Storing model: " + i);
+                        Thread image_thread = saveImageThread(image_, STYLES[stylebar_.getProgress()]);
+                        synchronized(image_thread) {
+                            image_thread.join();
+                        }
+                    } catch (InterruptedException e) {
+                        setStatus(e.getMessage());
+                    }
+                }
+                Log.i("runAndSaveAll", "Enable UI");
+                stylebar_.setEnabled(true);
+                image_view_.setEnabled(true);
+            }
+        }).start();
     }
 
     private enum ImageState {
