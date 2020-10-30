@@ -29,26 +29,26 @@ public class MainActivity extends AppCompatActivity {
 
     private final static int PERM_REQUEST_CODE_ = 1;
     private final static int[] STYLES = new int[]{
-//            R.drawable.art_2092530_640,
-//            R.drawable.art_2108118_640,
-//            R.drawable.art_3125816_640,
-//            R.drawable.art_4178302_640,
-//            R.drawable.background_2719576_640,
-//            R.drawable.background_2734972_640,
-//            R.drawable.background_2743842_640,
-//            R.drawable.camel_5674406_640,
-//            R.drawable.cartoon_5544856_640,
-//            R.drawable.color_4287692_640,
-//            R.drawable.elephant_5671866_640,
-//            R.drawable.eye_2555760_640,
-//            R.drawable.forest_5656930_640,
-//            R.drawable.fox_5617008_640,
-//            R.drawable.girl_2242858_640,
-//            R.drawable.golden_gate_bridge_5673315_640,
-//            R.drawable.halloween_5658809_640,
-//            R.drawable.heart_5677354_640,
-//            R.drawable.image_1247354_640,
-            R.drawable.lace_5674462_640,
+            R.drawable.art_2092530_640,
+            R.drawable.art_2108118_640,
+            R.drawable.art_3125816_640,
+            R.drawable.art_4178302_640,
+            R.drawable.background_2719576_640,
+            R.drawable.background_2734972_640,
+            R.drawable.background_2743842_640,
+            R.drawable.camel_5674406_640,
+            R.drawable.cartoon_5544856_640,
+            R.drawable.color_4287692_640,
+            R.drawable.elephant_5671866_640,
+            R.drawable.eye_2555760_640,
+            R.drawable.forest_5656930_640,
+//            R.drawable.fox_5617008_640, results in a completely black image
+            R.drawable.girl_2242858_640,
+            R.drawable.golden_gate_bridge_5673315_640,
+            R.drawable.halloween_5658809_640,
+            R.drawable.heart_5677354_640,
+            R.drawable.image_1247354_640,
+//            R.drawable.lace_5674462_640, causes a SIGSEGV
             R.drawable.landscape_4258253_640,
             R.drawable.loveourplanet_4851331_640,
             R.drawable.man_5631295_640,
@@ -56,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
             R.drawable.painting_3995999_640,
             R.drawable.pair_2028068_640,
             R.drawable.parrot_5658203_640,
-            R.drawable.porcupine_5677365_640,
+//            R.drawable.porcupine_5677365_640, causes a SIGSEGV
             R.drawable.reading_5173530_640,
             R.drawable.stars_5673499_640,
             R.drawable.turtle_5674360_640,
@@ -183,9 +183,6 @@ public class MainActivity extends AppCompatActivity {
         Bitmap style = GetBitmapResource(style_id);
         try {
             image_ = model.Run(preview, content, style);
-            int new_height = content.getHeight();
-            int new_width = content.getWidth();
-            image_ = Bitmap.createScaledBitmap(image_, new_width, new_height, true);
             setImage(image_);
         } catch (Model.ExecutionError error) {
             return "Transfer failed: " + error.getMessage();
@@ -285,6 +282,14 @@ public class MainActivity extends AppCompatActivity {
         return thread;
     }
 
+    private void SetProgress(int progress) {
+        Log.i("Stylebar", "Style: " + progress);
+        setImage(STYLES[progress]);
+        setThumbnail(R.drawable.gilbert);
+        image_state_ = ImageState.STYLE;
+        image_ = null;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -298,11 +303,7 @@ public class MainActivity extends AppCompatActivity {
                 new SeekBar.OnSeekBarChangeListener() {
                     @Override
                     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                        Log.i("Stylebar", "Style: " + progress);
-                        setImage(STYLES[progress]);
-                        setThumbnail(R.drawable.gilbert);
-                        image_state_ = ImageState.STYLE;
-                        image_ = null;
+                        SetProgress(progress);
                     }
 
                     @Override
@@ -362,6 +363,8 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
         );
+
+        SetProgress(0);
     }
 
     @Override

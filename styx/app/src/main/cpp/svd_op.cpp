@@ -117,22 +117,23 @@ namespace tflite {
                 LOGI("SvdEval");
                 long start_time = currentTimeMillis();
                 using namespace tflite;
+                LOGI("SvdEval: Getting tensors");
                 const TfLiteTensor *input = GetInput(context, node, 0);
                 TfLiteTensor *s = GetOutput(context, node, 0);
                 TfLiteTensor *u = GetOutput(context, node, 1);
                 TfLiteTensor *v = GetOutput(context, node, 2);
-
                 float *input_data = input->data.f;
                 float *s_data = s->data.f;
                 float *u_data = u->data.f;
                 float *v_data = v->data.f;
-
+                LOGI("SvdEval: Getting shape");
                 std::vector<int> input_shape;
                 if (!get2dShape(*input, &input_shape)) {
                     return kTfLiteError;
                 }
                 int num_rows = input_shape[0];
                 int num_cols = input_shape[1];
+                LOGI("SvdEval: Preparing input");
                 Eigen::MatrixXf input_eigen(num_rows, num_cols);
                 for (int index = 0; index < NumElements(input); ++index) {
                     int row = index / input_shape[0];
@@ -141,6 +142,7 @@ namespace tflite {
                 }
                 const int max_rank = std::min(input_eigen.cols(), input_eigen.rows());
                 int rank = svd_rank_;
+                LOGI("SvdEval: Getting rank");
                 if (rank >= max_rank) {
                     LOGI(
                             "Setting rank to full rank (svd rank %d, max rank: %d).",
@@ -149,8 +151,10 @@ namespace tflite {
                     rank = -1;
                 }
                 if (rank == -1) {
+                    LOGI("BDCSVD SVD: (%d, %d)", num_rows, num_cols);
                     Eigen::BDCSVD <Eigen::MatrixXf> svd(input_eigen,
                                                         Eigen::ComputeFullU | Eigen::ComputeFullV);
+                    LOGI("BDCSVD SVD: done");
                     const Eigen::VectorXf &s_eigen = svd.singularValues();
                     CopyVector(s_eigen, s_data);
                     const Eigen::MatrixXf &u_eigen = svd.matrixU();
@@ -160,9 +164,11 @@ namespace tflite {
                 } else {
                     std::mt19937_64 randomEngine{};
                     randomEngine.seed(777);
+                    LOGI("RandSVD: (%d, %d) rank: %d", num_rows, num_cols, rank);
                     Rsvd::RandomizedSvd <Eigen::MatrixXf, std::mt19937_64, Rsvd::SubspaceIterationConditioner::Lu> svd(
                             randomEngine);
                     svd.compute(input_eigen, rank);
+                    LOGI("RandSVD: done");
                     std::fill(s_data, s_data + NumElements(s), 0.0f);
                     std::fill(u_data, u_data + NumElements(u), 0.0f);
                     std::fill(v_data, v_data + NumElements(v), 0.0f);

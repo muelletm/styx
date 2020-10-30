@@ -49,13 +49,23 @@ public class Model {
                                              Bitmap bitmap) {
         Log.i("main", "LoadResourceImageAsTensor");
         Timer timer = new Timer();
+
+        Log.i("LoadResourceImageAsTensor", "Old height: " + bitmap.getHeight());
+        Log.i("LoadResourceImageAsTensor", "Old width: " + bitmap.getWidth());
+
         int max_size = Math.max(bitmap.getWidth(), bitmap.getHeight());
-        int new_size = Math.max(Math.min(max_size, max_image_size), MIN_IMAGE_SIZE_);
+        int new_size = Math.min(max_size, max_image_size);
 
         double scale_factor = (double) new_size / (double) max_size;
 
         int new_height = (int) (bitmap.getHeight() * scale_factor);
         int new_width = (int) (bitmap.getWidth() * scale_factor);
+
+        Log.i("LoadResourceImageAsTensor", "New height: " + new_height);
+        Log.i("LoadResourceImageAsTensor", "New width: " + new_width);
+
+        new_height = Math.max(new_height, MIN_IMAGE_SIZE_);
+        new_width = Math.max(new_width, MIN_IMAGE_SIZE_);
 
         bitmap = Bitmap.createScaledBitmap(bitmap, new_width, new_height, false);
 
