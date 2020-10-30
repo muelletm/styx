@@ -75,7 +75,7 @@ public class MainActivity extends AppCompatActivity {
             R.drawable.woman_5668428_640,
     };
 
-    private Model model_ = new Model("big4321_dp.tflite",
+    private Model model_ = new Model("big4321_dq.tflite",
             new ModelConfig(25000, 64, 256),
             new ModelConfig(85000, 128, 512));
     private ImageState image_state_ = ImageState.STYLE;
