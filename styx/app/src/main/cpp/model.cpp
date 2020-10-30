@@ -119,14 +119,14 @@ runTransfer(JNIEnv *env,
 }
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_stupid_styx_1cc_Model_prepareInterpreter(JNIEnv *env, jobject thiz,
+Java_com_stupid_styx_Model_prepareInterpreter(JNIEnv *env, jobject thiz,
                                                   jstring modelPath) {
     std::string output = PrepareInterpreter(jstringToString(env, modelPath));
     return env->NewStringUTF(output.c_str());
 }
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_stupid_styx_1cc_Model_runStyleTransfer(JNIEnv *env,
+Java_com_stupid_styx_Model_runStyleTransfer(JNIEnv *env,
                                                 jobject thiz,
                                                 jint svd_rank,
                                                 jobject content,

@@ -1,4 +1,4 @@
-package com.stupid.styx_cc;
+package com.stupid.styx;
 
 import android.Manifest;
 import android.content.pm.PackageManager;

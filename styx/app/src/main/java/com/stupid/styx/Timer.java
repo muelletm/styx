@@ -1,4 +1,4 @@
-package com.stupid.styx_cc;
+package com.stupid.styx;
 
 public class Timer {
     private final long time_;

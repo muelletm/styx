@@ -1,4 +1,4 @@
-StyxCC
+Styx
 =========
 
 Based on https://developer.android.com/studio/projects/add-native-code.
